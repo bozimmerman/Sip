@@ -4,21 +4,21 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 
 ## Features
 
-- ** ANSI-256 **: All the colors you could hope for.
-- ** MXP **: Pictures, sounds, clickable text, and mini-frames.
-- ** MSP **: Sound and Music
-- ** GMCP **: Access server information out-of-band.
-- ** MSDP **: (ditto)
-- ** Aliases **: Customize your commands, or trigger a myriad events with new ones.
-- ** Triggers **: Cause a custom action when the mud sends a particular message.
-- ** Scripts (JavaScript) **: Go wild with customizing your mud client.
-- ** Timers **: Cause some action to occur periodically, or after a delay. 
-- ** Plugins **: Sweet bundles of Modifications.
-- ** MXP editor **: Customize your screen layout or colors, have a window for TELLs, etc. 
+- ANSI-256: All the colors you could hope for.
+- MXP: Pictures, sounds, clickable text, and mini-frames.
+- MSP: Sound and Music
+- GMCP: Access server information out-of-band.
+- MSDP: (ditto)
+- Aliases: Customize your commands, or trigger a myriad events with new ones.
+- Triggers: Cause a custom action when the mud sends a particular message.
+- Scripts (JavaScript): Go wild with customizing your mud client.
+- Timers: Cause some action to occur periodically, or after a delay. 
+- Plugins: Sweet bundles of Modifications.
+- MXP editor: Customize your screen layout or colors, have a window for TELLs, etc. 
 
 ## Screenshots
 
-*(Add a screenshot of Sip in action here, showing the UI with #output, <input>, and menu item. You can capture this by running the .exe with --debug, taking a screenshot, and uploading to your hosting platform.)*
+*(Coming Soon)*
 
 ## Installation
 
@@ -79,6 +79,7 @@ If you’d like to modify Sip and build your own `.exe`:
 ## Known Issues
 
 - **Windows Only**: Currently built for Windows. To support macOS/Linux, modify `package.json` `build` targets and rebuild.
+- **Alpha (Barely)**: There are known issues, mostly with connection and phonebook related things.
 
 ## Contributing
 
@@ -99,7 +100,7 @@ For questions, bug reports, or feature requests, reach out via:
 - Contact: https://www.zimmers.net/email/form-page.html
 - Development Home Page: http://www.coffeemud.org
 - Support forum: http://coffeemud.net:27744/forum.cmvp?journal=Support&journalpage=0
-- GitHub: [yourusername](https://github.com/yourusername)
+- GitHub: [bozimmerman](https://github.com/bozimmerman)
 
 ---
 
