@@ -1,0 +1,40 @@
+{
+  "name": "Sip",
+  "version": "3.0.0",
+  "description": "Sip: A MUD Client!",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "author": "Bo Zimmerman",
+  "license": "Apache 2.0",
+  "keywords": [],
+  "devDependencies": {
+    "electron": "^36.3.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.planet_ink.sip",
+    "productName": "Sip",
+    "files": [
+      "main.js",
+      "index.html",
+      "icon.png",
+      "dialogs/**/*",
+      "help/**/*",
+      "images/**/*",
+      "js/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "icon.png"
+    }
+  }
+}

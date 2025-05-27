@@ -1,0 +1,18 @@
+<TABLE STYLE="position:absolute;width:100%;table-layout:fixed" BORDER=0>
+<TR><TD>
+	<INPUT TYPE=TEXT  STYLE="width:400px;" NAME="SIPLETTITLE" VALUE="${window.sipletInputTitle}">
+</TD></TR>
+<TR><TD WIDTH=100%>
+	<TEXTAREA WRAP=SOFT NAME="SIPLETTEXT" STYLE="width:100%;height:180px;">${window.sipletInputText.replaceAll('%0D','\n')}</TEXTAREA>
+</TD></TR>
+<TR><TD WIDTH=100%>
+	<a href="javascript:SubmitSipletInputEntry();">
+	<TABLE WIDTH=57 HEIGHT=23 BACKGROUND="images/lilButt.gif"  style="cursor:hand" 
+		ONCLICK="SubmitSipletInputEntry();" 
+		TABINDEX=1 BORDER=0 CELLSPACING=0 CELLPADDING=0>
+		<TR VALIGN=CENTER><TD ALIGN=CENTER><FONT color=purple SIZE=-2>
+			<B>Submit</B></FONT></a>
+		</TD></TR>
+	</TABLE></a>
+</TD></TR>
+</TABLE>
