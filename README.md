@@ -18,7 +18,7 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 
 ## Screenshots
 
-*(Coming Soon)*
+![Sip Screen](https://zimmers.net/home/mud/sip.jpg)
 
 ## Installation
 
