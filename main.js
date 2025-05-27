@@ -14,7 +14,8 @@ function createWindow() {
 
   win.loadFile('index.html');
   win.setMenu(null);
-  const isDebug = process.argv.includes('--debug');
+
+  const isDebug = process.argv.includes('--dev');
   if (isDebug) {
     win.webContents.openDevTools();
   }

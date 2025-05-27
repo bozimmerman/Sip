@@ -23,18 +23,18 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 ## Installation
 
 1. **Download the Executable**:
-   - Download `Sip-3.0.0-portable.exe` from [GitHub Releases](https://github.com/bozimmerman/sip/releases)
+   - Download `Sip-3.0.0.exe` from [GitHub Releases](https://github.com/bozimmerman/sip/releases)
 
 2. **Run Sip**:
-   - Double-click `Sip-3.0.0-portable.exe` to launch the app on Windows. No installation is required—this is a portable executable.
+   - Double-click `Sip-3.0.0.exe` to launch the app on Windows. No installation is required—this is a portable executable.
 
 ## Usage
 
 1. **Launch Sip**:
-   - Run `Sip-3.0.0-portable.exe`.
-   - Optionally, use `--debug` to enable DevTools for troubleshooting:
+   - Run `Sip-3.0.0.exe`.
+   - Optionally, use `--dev` to enable DevTools for troubleshooting:
      ```
-     Sip-1.0.0-portable.exe --debug
+     Sip-1.0.0.exe --dev
      ```
 
 2. **Connect to CoffeeMUD**:
@@ -66,21 +66,20 @@ If you’d like to modify Sip and build your own `.exe`:
 
    npm start
 
-- Add `--debug` to open DevTools:
+- Add `--dev` to open DevTools:
   ```
-  npm start -- --debug
+  npm start -- --dev
   ```
 
 4. **Build the .exe**:
 
    npm run dist
 
-- Outputs `Sip-3.0.0-portable.exe` in the `dist/` folder.
+- Outputs `Sip-3.0.0.exe` in the `dist/` folder.
 
 ## Known Issues
 
 - **Windows Only**: Currently built for Windows. To support macOS/Linux, modify `package.json` `build` targets and rebuild.
-- **Alpha (Barely)**: There are known issues, mostly with connection and phonebook related things.
 
 ## Contributing
 
