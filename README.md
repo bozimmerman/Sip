@@ -55,6 +55,7 @@ If you’d like to modify Sip and build your own `.exe`:
 1. **Clone the Repository**:
 
    svn checkout https://coffeemud.net/public/Sip
+   
    cd Sip
 
 2. **Install Dependencies**:
