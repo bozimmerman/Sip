@@ -6,9 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
-    "dist": "electron-builder --win"
+    "dist:win": "electron-builder --win --ia32 --x64 && npm run postdist:win",
+    "postdist:win": "ren dist\\Sip-3.0.0.ia32.exe Sip-3.0.0.win32.exe && ren dist\\Sip-3.0.0.x64.exe Sip-3.0.0.win64.exe",
+    "dist:linux": "electron-builder --linux",
+    "dist:mac": "electron-builder --mac"
   },
-  "author": "Bo Zimmerman",
+  "author": {
+    "name": "Bo Zimmerman",
+    "email": "bo@zimmers.net"
+  },
+  "homepage": "http://www.coffeemud.org/",
   "license": "Apache 2.0",
   "keywords": [],
   "devDependencies": {
@@ -31,10 +38,25 @@
       "target": [
         {
           "target": "portable",
+          "arch": ["ia32"]
+        },
+        {
+          "target": "portable",
           "arch": ["x64"]
         }
       ],
-      "icon": "icon.png"
+      "icon": "icon.png",
+      "artifactName": "${productName}-${version}.${arch}.exe"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.utilities",
+      "artifactName": "${productName}-${version}.mac.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage", "deb", "rpm"],
+      "category": "Utility",
+      "artifactName": "${productName}-${version}.linux.${ext}"
     }
   }
 }
