@@ -51,7 +51,10 @@
     "mac": {
       "target": ["dmg", "zip"],
       "category": "public.app-category.utilities",
-      "artifactName": "${productName}-${version}.mac.${ext}"
+      "artifactName": "${productName}-${version}.mac.${ext}",
+      "sign": false,
+      "gatekeeperAssess": false,
+      "hardenedRuntime": false
     },
     "linux": {
       "target": ["AppImage", "deb", "rpm"],
