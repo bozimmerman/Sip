@@ -1,13 +1,13 @@
 {
   "name": "Sip",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Sip: A MUD Client!",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "dist:win": "electron-builder --win --ia32 --x64 && npm run postdist:win",
-    "postdist:win": "ren dist\\Sip-3.0.0.ia32.exe Sip-3.0.0.win32.exe && ren dist\\Sip-3.0.0.x64.exe Sip-3.0.0.win64.exe",
+    "postdist:win": "ren dist\\Sip-${npm_package_version}.ia32.exe Sip-${npm_package_version}.win32.exe && ren dist\\Sip-${npm_package_version}.x64.exe Sip-${npm_package_version}.win64.exe",
     "dist:linux": "electron-builder --linux",
     "dist:mac": "electron-builder --mac"
   },
