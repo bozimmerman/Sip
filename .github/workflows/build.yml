@@ -65,7 +65,13 @@ jobs:
       - name: Prepare Artifacts
         run: |
           mkdir -p out
-          mv dist/* out/
+          export npm_package_version=$(node -p "require('./package.json').version")
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mv dist/Sip-$npm_package_version.ia32.exe out/Sip-$npm_package_version.win32.exe || true
+            mv dist/Sip-$npm_package_version.x64.exe out/Sip-$npm_package_version.win64.exe || true
+          else
+            mv dist/* out/
+          fi
         shell: bash
 
       - name: Upload Artifacts
