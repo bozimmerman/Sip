@@ -9,6 +9,12 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name (e.g., v3.0.3)'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -84,8 +90,25 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
+       if: github.event_name == 'workflow_dispatch'
+       steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Tag
+        if: github.event_name == 'workflow_dispatch'  # Only create tag for manual trigger
+        run: |
+          git tag ${{ github.event.inputs.tag }}
+          git push origin ${{ github.event.inputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug Release Condition
+        run: |
+          echo "github.ref is ${{ github.ref }}"
+          echo "Release job running for tag: ${{ github.event.inputs.tag || github.ref_name }}"
+        shell: bash
+        
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -93,6 +116,8 @@ jobs:
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
             artifacts/sip-linux/*.AppImage
@@ -101,9 +126,9 @@ jobs:
             artifacts/sip-windows/*.exe
             artifacts/sip-macos/*.dmg
             artifacts/sip-macos/*.zip
-          tag_name: ${{ github.ref_name }}
-          name: Sip ${{ github.ref_name }}
-          body: "Automated Sip release for ${{ github.ref_name }} - A MUD Client!"
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }} 
+          name: Sip ${{ github.event.inputs.tag || github.ref_name }}
+          body: "Automated Sip release for ${{ github.event.inputs.tag || github.ref_name }} - A MUD Client!"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
