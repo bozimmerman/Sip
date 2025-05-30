@@ -58,6 +58,9 @@ jobs:
       - name: Build Sip
         run: npm run ${{ matrix.build_cmd }}
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare Artifacts
         run: |
@@ -96,4 +99,5 @@ jobs:
           name: Sip ${{ github.ref_name }}
           body: "Automated Sip release for ${{ github.ref_name }} - A MUD Client!"
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
