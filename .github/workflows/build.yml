@@ -101,6 +101,7 @@ jobs:
           git tag ${{ github.event.inputs.tag }}
           git push origin ${{ github.event.inputs.tag }}
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Debug Release Condition
