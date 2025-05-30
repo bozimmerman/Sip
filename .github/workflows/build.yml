@@ -49,10 +49,10 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-npm-
 
-      - name: Install Dependencies
+      - name: Install Dependencies with npm install
         run: npm install
 
-      - name: Install Dependencies
+      - name: Install Dependencies with npm ci
         run: npm ci
 
       - name: Install Linux Dependencies
@@ -96,7 +96,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create Tag
-        if: github.event_name == 'workflow_dispatch'  # Only create tag for manual trigger
+        if: github.event_name == 'workflow_dispatch'
         run: |
           git tag ${{ github.event.inputs.tag }}
           git push origin ${{ github.event.inputs.tag }}
@@ -118,6 +118,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
             artifacts/sip-linux/*.AppImage
@@ -126,9 +127,6 @@ jobs:
             artifacts/sip-windows/*.exe
             artifacts/sip-macos/*.dmg
             artifacts/sip-macos/*.zip
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }} 
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: Sip ${{ github.event.inputs.tag || github.ref_name }}
           body: "Automated Sip release for ${{ github.event.inputs.tag || github.ref_name }} - A MUD Client!"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
