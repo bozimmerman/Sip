@@ -3,10 +3,10 @@ name: Sip Cross-Platform Build
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
   push:
     tags:
       - 'v*'
