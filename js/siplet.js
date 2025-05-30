@@ -134,10 +134,17 @@ function SipletWindow(windowName)
 	{
 		if(!s) return s;
 		var oldResume = this.text.resume;
+		var oldFlush = this.flushWindow;
+		this.flushWindow = function(){};
 		this.text.resume = null;
-		s=this.text.process(s) + this.text.flush();
+		s=this.text.process(s)
+		var startTime = performance.now();
+		while(this.text.resume && ((performance.now() - startTime)<500))
+			s+=this.text.process('')
+		s += this.text.flush();
 		if((!this.mxp.active())&&(this.fixVariables))
 			s = this.fixVariables(s);
+		this.flushWindow = oldFlush;
 		this.text.resume = oldResume;
 		return s;
 	};
@@ -199,6 +206,7 @@ function SipletWindow(windowName)
 	};
 	
 	this.htmlBuffer = '';
+	this.numLines = 0;
 	this.flushWindow = function() {
 		if(this.htmlBuffer.length > 0)
 		{
@@ -214,7 +222,9 @@ function SipletWindow(windowName)
 						reprocess += elem.rawText;
 				}
 			}
-			span.innerHTML = reprocess + this.htmlBuffer;
+			this.htmlBuffer = reprocess + this.htmlBuffer;
+			this.numLines += brCount(this.htmlBuffer);
+			span.innerHTML = this.htmlBuffer;
 			this.window.appendChild(span);
 			this.process(reprocess);
 			this.htmlBuffer='';
@@ -222,6 +232,13 @@ function SipletWindow(windowName)
 			{
 				this.tab.style.backgroundColor = "lightgreen";
 				this.tab.style.color = "black";
+			}
+			while((this.numLines > me.maxLines)
+			&&(this.window.childElementCount > 1))
+			{
+				var child = this.window.firstChild;
+				this.numLines -= brCount(child.innerHTML);
+				this.window.removeChild(child);
 			}
 			if(rescroll)
 				this.scrollToBottom(this.window,0);
@@ -231,8 +248,6 @@ function SipletWindow(windowName)
 	this.onReceive = function(e)
 	{
 		var entries = me.bin.parse(e.data);
-		while (me.window.childNodes.length > me.maxLines)
-			me.window.removeChild(me.window.firstChild);
 		me.htmlBuffer = '';
 		while(entries.length > 0)
 		{
@@ -284,6 +299,8 @@ function SipletWindow(windowName)
 					me.textBuffer += stripHtmlTags(newText);
 					if(newText.indexOf('<BR>')>=0)
 					{
+						if(me.htmlBuffer.length > 16384)
+							me.flushWindow();
 						me.triggerCheck();
 						while(me.textBuffer.length > 1024)
 						{
