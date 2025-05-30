@@ -44,6 +44,9 @@ jobs:
           restore-keys: ${{ runner.os }}-npm-
 
       - name: Install Dependencies
+        run: npm install
+
+      - name: Install Dependencies
         run: npm ci
 
       - name: Install Linux Dependencies
