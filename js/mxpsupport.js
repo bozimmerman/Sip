@@ -347,14 +347,14 @@ window.defElements = {
 	"VERSION": new MXPElement("VERSION", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"SUPPORT": new MXPElement("SUPPORT", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"GAUGE": new MXPElement("GAUGE", "", "ENTITY MAX CAPTION COLOR", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
-	"STAT": new MXPElement("STAT", "", "ENTITY MAX CAPTION", "", MXPBIT.SPECIAL | MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
+	"STAT": new MXPElement("STAT", "", "ENTITY MAX CAPTION", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"FRAME": new MXPElement("FRAME", "", "NAME ACTION TITLE INTERNAL ALIGN LEFT TOP WIDTH HEIGHT SCROLLING FLOATING", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"DEST": new MXPElement("DEST", "", "NAME EOF", "", MXPBIT.SPECIAL),
 	"DESTINATION": new MXPElement("DESTINATION", "", "NAME EOF", "", MXPBIT.SPECIAL),
 	"RELOCATE": new MXPElement("RELOCATE", "", "URL PORT", "", MXPBIT.SPECIAL | MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
-	"USER": new MXPElement("USER", "", "", "", MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
-	"PASSWORD": new MXPElement("PASSWORD", "", "", "", MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
+	"USER": new MXPElement("USER", "", "", "", MXPBIT.COMMAND | MXPBIT.SPECIAL),
+	"PASSWORD": new MXPElement("PASSWORD", "", "", "", MXPBIT.COMMAND | MXPBIT.SPECIAL),
 	"IMAGE": new MXPElement("IMAGE", "<IMG SRC=\"&url;&fname;\" HEIGHT=&h; WIDTH=&w; ALIGN=&align;>", 
 			"FNAME URL T H W HSPACE VSPACE ALIGN ISMAP", "", MXPBIT.COMMAND, "HSPACE VSPACE ISMAP"),
 	"IMG": new MXPElement("IMG", "<IMG SRC=\"&src;\" HEIGHT=&height; WIDTH=&width; ALIGN=&align;>", 
@@ -401,7 +401,6 @@ var MXP = function(sipwin)
 		this.eatNextEOLN = false;
 		this.eatAllEOLN = false;
 		this.openElements = [];
-		this.gauges = [];
 		this.tags = {};
 		this.frames = {};
 		this.partial = null;
@@ -1038,25 +1037,32 @@ var MXP = function(sipwin)
 		else
 			this.entities[name] = value;
 		var gauge = null;
-		for (var g = 0; g < this.gauges.length; g++)
+		for (var g = 0; g < sipwin.gauges.length; g++)
 		{
-			gauge = this.gauges[g];
-			if ((gauge[0].toLowerCase() == name) || (gauge[1].toLowerCase() == name))
+			gauge = sipwin.gauges[g];
+			if ((gauge.lentity == name) || (name == gauge.lmaxEntity))
 			{
-				var initEntity = this.getEntityValue(gauge[0], null);
-				var initValue = 0;
-				if (isNumber(initEntity))
-					initValue = Number(initEntity);
-				var maxEntity = this.getEntityValue(gauge[1], null);
-				var maxValue = 100;
-				if (isNumber(maxEntity)>0)
-					maxValue = Number(maxEntity);
-				if (maxValue < initValue)
-					maxValue = (initValue <= 0) ? 100 : initValue;
-				if (initValue > 0)
-					initValue = Math.round(100.0 * (initValue / maxValue));
-				sipwin.modifyGauge(gauge[0],initValue,maxValue);
+				var initValue = this.getEntityValue(gauge.entity, null);
+				if (isNumber(initValue))
+					initValue = Number(initValue);
+				var maxValue = null;
+				if(gauge.maxEntity != null)
+				{
+					maxValue = this.getEntityValue(gauge.maxEntity, null);
+					if (isNumber(maxValue))
+						maxValue = Number(maxValue);
+					if(gauge.bar)
+					{
+						if (maxValue < initValue)
+							maxValue = (initValue <= 0) ? 100 : initValue;
+						if (initValue > 0)
+							initValue = Math.round(100.0 * (initValue / maxValue));
+					}
+				}
+				gauge.value = initValue;
+				gauge.max = maxValue;
 			}
+			sipwin.modifyGauges();
 		}
 	};
 	
@@ -1395,6 +1401,35 @@ var MXP = function(sipwin)
 						return (Number(s.substr(0,s.length-1))*16)+'px';
 					return s;
 				};
+				var getPixels = function(s)
+				{
+					if(isNumber(s))
+						x=Number(s);
+					else
+					if(s.endsWith("px"))
+						x = Number(s.substr(0,s.length-2));
+					else
+						return null;
+				};
+				var fixISize = function(s,curr)
+				{
+					if((s==null)||(!curr))
+						return null;
+					s=s.trim();
+					if(s.endsWith('%'))
+						return s;
+					var x = getPixels(s);
+					var y = getPixels(curr);
+					if((x == null)||(y==null)) 
+						return;
+					return Math.round(Math.ceil(x / y * 100.0)) + '%';
+				};
+				var dePct = function(s)
+				{
+					if(s.endsWith('%'))
+						return Number(s.substr(0,s.length-1));
+					return getPixels(s);
+				};
 				top=fixSize(top);
 				left=fixSize(left);
 				width=fixSize(width);
@@ -1433,50 +1468,53 @@ var MXP = function(sipwin)
 							width = "50%";
 						if(height == null)
 							height = "50%";
-						var siblingWindow = sipwin.window.parentNode; // the current window container
-						if(siblingWindow == sipwin.topContainer)
-							siblingWindow = sipwin.window;
-						var mainParentWindow = siblingWindow.parentNode; // has the titlebar in it and so forth
-						var newParentWindow = document.createElement('div'); // will replace the old parent window.
-						newParentWindow.style.cssText = siblingWindow.style.cssText;
-						var newTitleWindow = document.createElement('div'); // will replace the old parent window.
-						newTitleWindow.style.cssText = siblingWindow.style.cssText;
-						newParentWindow.appendChild(newTitleWindow);
-						mainParentWindow.appendChild(newParentWindow);
+						var siblingDiv = sipwin.window;
+						var containerDiv = sipwin.window.parentNode; // has the titlebar in it and window and so forth
+						var calced = getComputedStyle(sipwin.window);
+						width=fixISize(width,calced.width); // ensure they are %
+						height=fixISize(height,calced.height);
+						var newContainerDiv = document.createElement('div'); // will replace the old parent window.
+						newContainerDiv.style.cssText = containerDiv.style.cssText;
+						containerDiv.appendChild(newContainerDiv);
 						var newContentWindow = document.createElement('div');
-						newContentWindow.style.cssText = siblingWindow.style.cssText;
+						newContentWindow.style.cssText = sipwin.window.style.cssText;
 						newContentWindow.style.left = '0%';
 						newContentWindow.style.top = '0%';
 						newContentWindow.style.width = '100%';
 						newContentWindow.style.height = '100%';
 						newContentWindow.style.border = "solid white";
 						newContentWindow.style.boxSizing = "border-box";
-						newTitleWindow.appendChild(newContentWindow);
+						newContainerDiv.appendChild(newContentWindow);
 						switch(alignx)
 						{
 						case 0: // left
-							newParentWindow.style.width = width;
-							siblingWindow.style.left = width;
-							siblingWindow.style.width  = 'calc('+siblingWindow.style.width+' - ' + newParentWindow.style.width + ')';
+							newContainerDiv.style.left = siblingDiv.style.left;
+							siblingDiv.style.left = (dePct(siblingDiv.style.left) + dePct(width))+'%';
+							newContainerDiv.style.width = width;
+							siblingDiv.style.width = (dePct(siblingDiv.style.width) - dePct(width))+'%';
 							break;
 						case 1: // right
-							newParentWindow.style.left = 'calc(' + newParentWindow.style.width + ' - '  + width + ')';
-							newParentWindow.style.width = width;
-							siblingWindow.style.width  = 'calc('+siblingWindow.style.width+' - ' + newParentWindow.style.width + ')';
+							newContainerDiv.style.left = (dePct(siblingDiv.style.left)
+														+dePct(siblingDiv.style.width)
+														-dePct(width))+'%';
+							siblingDiv.style.width = (dePct(siblingDiv.style.width) - dePct(width))+'%';
+							newContainerDiv.style.width = width;
 							break;
 						case 2: // top
-							newParentWindow.style.top = "0%";
-							newParentWindow.style.height = height;
-							siblingWindow.style.top = height;
-							siblingWindow.style.height  = 'calc('+siblingWindow.style.height+' - ' + newParentWindow.style.height + ')';
+							newContainerDiv.style.top = siblingDiv.style.top;
+							siblingDiv.style.top = (dePct(siblingDiv.style.top) + dePct(height))+'%';
+							newContainerDiv.style.height = height;
+							siblingDiv.style.height = (dePct(siblingDiv.style.height) - dePct(height))+'%';
 							break;
 						case 3: // bottom
-							newParentWindow.style.top = 'calc(' + newParentWindow.style.height + ' - '  + height + ')';
-							newParentWindow.style.height = height;
-							siblingWindow.style.height  = 'calc('+siblingWindow.style.height+' - ' + newParentWindow.style.height + ')';
+							newContainerDiv.style.top = (dePct(siblingDiv.style.top)
+														+dePct(siblingDiv.style.height)
+														-dePct(height))+'%';
+							siblingDiv.style.height = (dePct(siblingDiv.style.height) - dePct(height))+'%';
+							newContainerDiv.style.height = height;
 							break;
 						}
-						var ents = [newParentWindow,newTitleWindow,newContentWindow];
+						var ents = [newContainerDiv,newContentWindow];
 						for(var w =0; w<ents.length;w++)
 						{
 							var ww = ents[w];
@@ -1517,7 +1555,7 @@ var MXP = function(sipwin)
 							titleBar = document.createElement('div');
 							titleBar.style.cssText = "position:absolute;top:0px;left:0px;height:0px;width:0px;";
 						}
-						newTitleWindow.append(titleBar);
+						newContainerDiv.append(titleBar);
 						if((scrolling!=null) && (scrolling.toLowerCase() == 'yes'))
 						{
 						    newContentWindow.style.overflowY = 'auto';
@@ -1525,7 +1563,7 @@ var MXP = function(sipwin)
 						}
 						if(action.toUpperCase() =='REDIRECT')
 							sipwin.window = newContentWindow;
-						this.frames[name] = newTitleWindow;
+						this.frames[name] = newContainerDiv;
 					}
 				}
 				else
@@ -1591,7 +1629,7 @@ var MXP = function(sipwin)
 					newTopWindow.appendChild(titleBar);
 					if(action.toUpperCase() =='REDIRECT')
 						sipwin.window = contentWindow;
-					sipwin.topContainer.appendChild(newTopWindow);
+					sipwin.topWindow.appendChild(newTopWindow);
 					this.frames[name] = newTopWindow;
 				}
 			}
@@ -1678,9 +1716,45 @@ var MXP = function(sipwin)
 				maxValue = (initValue <= 0) ? 100 : initValue;
 			if (initValue > 0)
 				initValue = Math.round(100.0 * (initValue / maxValue));
-			sipwin.createGauge(gaugeEntity,caption,color,initValue,maxValue);
-			var gauge = [ gaugeEntity, max ];
-			this.gauges.push(gauge);
+			sipwin.createGauge(gaugeEntity,max,true,caption,color,initValue,maxValue);
+		}
+		else
+		if (tagName =="STAT")
+		{
+			var gaugeEntity = E.getAttributeValue("ENTITY");
+			var max = E.getAttributeValue("MAX");
+			if (gaugeEntity == null)
+				return '';
+			gaugeEntity = gaugeEntity.toLowerCase();
+			if(max != null)
+				max = max.toLowerCase();
+			var caption = E.getAttributeValue("CAPTION");
+			if (caption == null)
+				caption = "";
+			var initEntity = this.getEntityValue(gaugeEntity, null);
+			var initValue = 0;
+			if (isNumber(initEntity))
+				initValue = Number(initEntity);
+			var maxEntityValue = null;
+			if(max != null)
+			{
+				maxEntityValue = this.getEntityValue(max, null);
+				if (isNumber(maxEntityValue))
+					maxEntityValue = Number(maxEntityValue);
+			}
+			sipwin.createGauge(gaugeEntity,max,false,caption,color,initValue,maxEntityValue);
+		}
+		else
+		if (tagName == "USER")
+		{
+			if(sipwin.pb && sipwin.pb.user)
+				sipwin.submitInput(sipwin.pb.user);
+		}
+		else
+		if (tagName == "PASSWORD")
+		{
+			if(sipwin.pb && sipwin.pb.password)
+				sipwin.submitInput(sipwin.pb.password);
 		}
 		else
 		if ((tagName == "DEST")
