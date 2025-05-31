@@ -2,36 +2,42 @@ window.gmcpPackages = [];
 
 window.gmcpPackages.push({
 	name: "Core",
+	lname: "core.",
 	version: "1",
-	Hello: function(sipwin, msg) { 
+	hello: function(sipwin, msg) { 
 		/* uh, ok */
 		if(!sipwin.gmcpSupported)
 			sipwin.gmcpSupported = {};
 	},
-	Supports_Set: function(sipwin, msg) {
+	supports_set: function(sipwin, msg) {
 		UpdateGMCPSupports(sipwin, msg, 'set');
 	},
-	Supports_Add: function(sipwin, msg) {
+	supports_add: function(sipwin, msg) {
 		UpdateGMCPSupports(sipwin, msg, 'add');
 	},
-	Supports_Remove: function(sipwin, msg) {
+	supports_remove: function(sipwin, msg) {
 		UpdateGMCPSupports(sipwin, msg, 'remove');
 	}
 });
 
 window.gmcpPackages.push({
 	name: "Client.Media",
+	lname: "client.media.",
 	version: "1",
-	Load: function(sipwin, msg) {
+	load: function(sipwin, msg) {
 		if(!isJsonObject(msg))
 			return;
+		if((msg.name)&&(!msg.file))
+			msg.file = msg.name;
 		if((!msg.file) || (!msg.url))
 			return;
 		sipwin.msp.LoadSound(msg.file, msg.url, msg.tag, false);
 	},
-	Play: function(sipwin, msg) {
+	play: function(sipwin, msg) {
 		if(!isJsonObject(msg))
 			return;
+		if((msg.name)&&(!msg.file))
+			msg.file = msg.name;
 		if((!msg.file) || (!msg.type))
 			return;
 		if (msg.type !== 'sound' && msg.type !== 'music') {
@@ -50,9 +56,11 @@ window.gmcpPackages.push({
 		if(msg.type == 'music')
 			sipwin.msp.PlaySound(msg.file, msg.url, msg.loops, msg.volume, msg.priority, true, msg.tag)
 	},
-	Stop: function(sipwin, msg) {
+	stop: function(sipwin, msg) {
 		if(!isJsonObject(msg))
 			return;
+		if((msg.name)&&(!msg.file))
+			msg.file = msg.name;
 		if(msg.file || msg.type)
 			sipwin.msp.StopSound(msg.file, msg.type);
 		else
@@ -62,11 +70,23 @@ window.gmcpPackages.push({
 
 window.gmcpPackages.push({
 	name: "Char.Login",
+	lname: "char.login.",
 	version: "1",
-	Default: function(sipwin, msg) {
+	default: function(sipwin, msg) {
 		if(!isJsonObject(msg))
 			return;
-		if("password-credentials" !== msg.type)
+		if(typeof msg.type === 'string')
+		{
+			if("password-credentials" !== msg.type)
+				return;
+		}
+		else
+		if(Array.isArray(msg.type))
+		{
+			if(msg.type.indexOf("password-credentials")<0)
+				return;
+		}
+		else
 			return;
 		if(sipwin.pb && sipwin.pb.user && sipwin.pb.password)
 		{
@@ -78,10 +98,10 @@ window.gmcpPackages.push({
 		}
 		
 	},
-	Response: function(sipwin, msg) {
+	response: function(sipwin, msg) {
 		// good for us?
 	},
-	Credentials: function(sipwin, msg) {
+	credentials: function(sipwin, msg) {
 		// we will never get this one
 	}
 });
@@ -142,4 +162,21 @@ function BuildGMCPHello(sipwin)
 	response = response.concat(StringToAsciiArray(suppStr));
 	response = response.concat([TELOPT.IAC, TELOPT.SE]);
 	return response;
+}
+
+function InvokeGMCP(sipwin, cmd, json)
+{
+	var lcmd = cmd.toLowerCase();
+	for(var i=0;i<window.gmcpPackages.length;i++)
+	{
+		var gmcpPkg = window.gmcpPackages[i];
+		if(lcmd.startsWith(gmcpPkg.lname))
+		{
+			var cmd = cmd.substr(gmcpPkg.lname.length);
+			cmd = cmd.replaceAll('.','_').toLowerCase();
+			if((cmd in gmcpPkg)
+			&&(typeof gmcpPkg[cmd] === 'function'))
+				try { gmcpPkg[cmd](sipwin, json); } catch(ee) {console.log(ee);}
+		}
+	}
 }
