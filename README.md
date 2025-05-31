@@ -4,12 +4,12 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 
 ## Features
 
-- ANSI-256: All the colors you could hope for.
+- ANSI-TRUE: All the colors you could hope for.
 - MXP: Pictures, sounds, clickable text, and mini-frames.
 - MSP: Sound and Music
-- GMCP: Access server information out-of-band.
-- MSDP: (ditto)
-- Aliases: Customize your commands, or trigger a myriad events with new ones.
+- GMCP: Access server information out-of-band + Client.Login, Client.Media.
+- MSDP: Access server information out-of-band
+- Aliases: Customize your commands, or trigger a myriad of events.
 - Triggers: Cause a custom action when the mud sends a particular message.
 - Scripts (JavaScript): Go wild with customizing your mud client.
 - Timers: Cause some action to occur periodically, or after a delay. 
