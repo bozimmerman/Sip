@@ -13,8 +13,9 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 - Triggers: Cause a custom action when the mud sends a particular message.
 - Scripts (JavaScript): Go wild with customizing your mud client.
 - Timers: Cause some action to occur periodically, or after a delay. 
-- Plugins: Sweet bundles of Modifications.
 - MXP editor: Customize your screen layout or colors, have a window for TELLs, etc. 
+- Media: Local images and sounds for your custom GUI.
+- Plugins: Sweet bundles of all the above and media and more.
 
 ## Screenshots
 
