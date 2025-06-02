@@ -21,18 +21,11 @@
 	></TEXTAREA>
 </TD></TR>
 <TR><TD colspan="2">
-	<a ID="SCRIPTSDELETE" href="javascript:document.getElementById('SCRIPTSROOT').trydelscript();">
-		<TABLE WIDTH=57 HEIGHT=23 BACKGROUND="images/lilButt.gif"  style="cursor:hand;display:inline;" 
-			ONCLICK="document.getElementById('SCRIPTSROOT').trydelscript();" 
-			TABINDEX=1 BORDER=0 CELLSPACING=0 CELLPADDING=0>
-		<TR VALIGN=CENTER><TD ALIGN=CENTER><FONT color=purple SIZE=-2>
-			<B>Delete</B></FONT>
-		</TD></TR></TABLE>
-	</a>
+	<SPAN ID="SCRIPTSDELETE">${butt('Delete',"document.getElementById('SCRIPTSROOT').trydelscript();");}</SPAN>
 </TD></TR>
 </TABLE>
 </SPAN>
-${
+<SCRIPT>
 	var fixscriptspage=function(){
 	if(document.getElementById('SCRIPTSTEXT'))
 	{
@@ -159,22 +152,24 @@ ${
 			var scriptindex = Number(dd.value);
 			if(scriptindex < 0)
 				return;
-			var curr=dd.selectedIndex;
-			dd.selectedIndex=-1;
-			dd.remove(curr);
-			for(var i=0;i < dd.options.length;i++)
-				if(Number(dd.options[i].value)>scriptindex)
-					dd.options[i].value=(Number(dd.options[i].value)-1);
-			var deadt = scripts[scriptindex];
-			scripts.splice(scriptindex,1);
-			root.modifyscripts();
-			sname.value='';
-			sname.style.backgroundColor = 'white';
-			stext.value='';
-			stext.editor.setValue('');
-			stext.style.backgroundColor = 'white';
-			delbutt.style.visibility='hidden';
-			stext.editor.getWrapperElement().style.backgroundColor = stext.style.backgroundColor;
+			SiConfirm('Delete '+dd.options[dd.selectedIndex].text+'?', function() {
+				var curr=dd.selectedIndex;
+				dd.selectedIndex=-1;
+				dd.remove(curr);
+				for(var i=0;i < dd.options.length;i++)
+					if(Number(dd.options[i].value)>scriptindex)
+						dd.options[i].value=(Number(dd.options[i].value)-1);
+				var deadt = scripts[scriptindex];
+				scripts.splice(scriptindex,1);
+				root.modifyscripts();
+				sname.value='';
+				sname.style.backgroundColor = 'white';
+				stext.value='';
+				stext.editor.setValue('');
+				stext.style.backgroundColor = 'white';
+				delbutt.style.visibility='hidden';
+				stext.editor.getWrapperElement().style.backgroundColor = stext.style.backgroundColor;
+			});
 		};
 		
 		var addParser = document.createElement('script');
@@ -221,4 +216,4 @@ ${
 	} else
 		setTimeout(fixscriptspage,10);
 };setTimeout(fixscriptspage,10);
-'';}
+</SCRIPT>

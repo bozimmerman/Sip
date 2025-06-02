@@ -19,8 +19,9 @@
   "keywords": [],
   "devDependencies": {
     "electron": "^36.3.1",
-    "electron-builder": "^24.13.3"
-  },
+    "electron-builder": "^24.13.3",
+    "@electron/remote": "^2.1.2"
+   },
   "build": {
     "appId": "com.planet_ink.sip",
     "productName": "Sip",
@@ -37,18 +38,25 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["ia32"]
+          "arch": [
+            "ia32"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "icon.png",
       "artifactName": "${productName}-${version}.${arch}.exe"
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}.mac.${ext}",
       "sign": false,
@@ -56,9 +64,16 @@
       "hardenedRuntime": false
     },
     "linux": {
-      "target": ["AppImage", "deb", "rpm"],
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
       "category": "Utility",
       "artifactName": "${productName}-${version}.linux.${ext}"
     }
+  },
+  "dependencies": {
+    "@electron/remote": "^2.1.2"
   }
 }

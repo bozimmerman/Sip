@@ -4,20 +4,14 @@
 	<TD><SELECT ID="QUICKCONNECTDROPDOWN" STYLE="position:relative;">
 		</SELECT>
 		<IMG ALIGN=RIGHT SRC="images/help.gif" ONCLICK="contextHelp(this,event,'Windows')">
-		<a href="javascript:var el=document.getElementById('QUICKCONNECTDROPDOWN');if(el)AddNewSipletTabByPB(el.value);hideOptionWindow();">
-			<TABLE WIDTH=57 HEIGHT=23 BACKGROUND="images/lilButt.gif"  style="cursor:hand;display:inline;" 
-				ONCLICK="var el=document.getElementById('QUICKCONNECTDROPDOWN');if(el)AddNewSipletTabByPB(el.value);hideOptionWindow();" 
-				TABINDEX=1 BORDER=0 CELLSPACING=0 CELLPADDING=0>
-			<TR VALIGN=CENTER><TD ALIGN=CENTER><FONT color=purple SIZE=-2>
-				<B>Connect</B></FONT>
-			</TD></TR></TABLE>
-		</a>
+		${butt('Connect',"var el=document.getElementById('QUICKCONNECTDROPDOWN');if(el)AddNewSipletTabByPB(el.value);hideOptionWindow();");}
 </TD></TR>
 </TR><TR><TD COLSPAN=2>&nbsp;</TD>
 <TR>
 	<TD>Auto Conn:</TD>
 	<TD><SELECT ID="AUTOCONNECTDROPDOWN" ONCHANGE="setConfig('/phonebook/auto',this.value);">
-		<OPTION VALUE="-1" ${(getConfig('/phonebook/auto','g0')!='-1')?"":"SELECTED"}>No Auto Connect
+		<OPTION VALUE="-2" ${(getConfig('/phonebook/auto','-2')!='-2')?"":"SELECTED"}>Connect Dialog
+		<OPTION VALUE="-1" ${(getConfig('/phonebook/auto','-2')!='-1')?"":"SELECTED"}>No Auto Connect
 		</SELECT>
 </TD></TR>
 </TR><TR><TD COLSPAN=2>&nbsp;</TD>
@@ -27,14 +21,7 @@
 	<TD><SELECT ID="CONNECTPHONEBOOK" ONCHANGE="document.getElementById('PHONEBOOKROOT').dropdownselected();">
 		<OPTION VALUE="-1">Add New Entry
 		</SELECT>
-		<a href="javascript:var el=document.getElementById('CONNECTPHONEBOOK');if(el)AddNewSipletTabByPB(el.value);hideOptionWindow();">
-			<TABLE WIDTH=57 HEIGHT=23 BACKGROUND="images/lilButt.gif"  style="cursor:hand;display:inline;" 
-				ONCLICK="var el=document.getElementById('CONNECTPHONEBOOK');if(el)AddNewSipletTabByPB(el.value);hideOptionWindow();" 
-				TABINDEX=1 BORDER=0 CELLSPACING=0 CELLPADDING=0>
-			<TR VALIGN=CENTER><TD ALIGN=CENTER><FONT color=purple SIZE=-2>
-				<B>Connect</B></FONT>
-			</TD></TR></TABLE>
-		</a>
+		${butt('Connect',"var el=document.getElementById('CONNECTPHONEBOOK');if(el)AddNewSipletTabByPB(el.value);hideOptionWindow();");}
 </TD></TR>
 <TR>
 	<TD>Port:</TD>
@@ -62,17 +49,10 @@
 		SIZE=20 VALUE=""></TD>
 </TR>
 <TR><TD COLSPAN=2>
-	<a ID="PHONEBOOKDELETE" href="javascript:document.getElementById('PHONEBOOKROOT').trydelphonebook();">
-		<TABLE WIDTH=57 HEIGHT=23 BACKGROUND="images/lilButt.gif"  style="cursor:hand;display:inline;" 
-			ONCLICK="document.getElementById('PHONEBOOKROOT').trydelphonebook();" 
-			TABINDEX=1 BORDER=0 CELLSPACING=0 CELLPADDING=0>
-		<TR VALIGN=CENTER><TD ALIGN=CENTER><FONT color=purple SIZE=-2>
-			<B>Delete</B></FONT>
-		</TD></TR></TABLE>
-	</a>
+	<SPAN ID="PHONEBOOKDELETE">${butt('Delete',"document.getElementById('PHONEBOOKROOT').trydelphonebook();");}</SPAN>
 </TD></TR>
 </TABLE>
-${
+<SCRIPT>
 	var fixphonebookpage=function(){
 	if(document.getElementById('PHONEBOOKDELETE'))
 	{
@@ -151,14 +131,15 @@ ${
 		root.fixtopdropdowns = function()
 		{
 			var gphonebook = window.phonebook;
-			var auto = getConfig('/phonebook/auto','g0');
+			var auto = getConfig('/phonebook/auto','-2');
 			var qcdd = document.getElementById('QUICKCONNECTDROPDOWN');
 			var acdd = document.getElementById('AUTOCONNECTDROPDOWN');
 			while(qcdd.options.length > 0)
 				qcdd.remove(0);
-			while(acdd.options.length > 1)
-				acdd.remove(1);
-			acdd.selectedIndex=-1;
+			while(acdd.options.length > 2)
+				acdd.remove(2);
+			if((acdd.value != '-1')&&(acdd.value != '-2'))
+				acdd.selectedIndex=-1;
 			qcdd.selectedIndex=-1;
 			for(var i=0;i < gphonebook.length;i++)
 			{
@@ -248,8 +229,7 @@ ${
 			{
 				var pb = phonebook[pbindex];
 				var name = root.makephonebookname(pb.user,pb.name,pb.port);
-				if(window.confirm('Delete entry ' + name + '?'))
-				{
+				SiConfirm('Delete entry ' + name + '?',function() {
 					var opt = phbkField.options[phbkField.selectedIndex];
 					for(var i=phbkField.selectedIndex+1; i < phbkField.options.length; i++)
 					{
@@ -278,10 +258,10 @@ ${
 								siplet.pbwhich = 'g0';
 						}
 					}
-				}
+				});
 			}
 		};
 	} else
 		setTimeout(fixphonebookpage,10);
 };setTimeout(fixphonebookpage,10);
-'';}
+</SCRIPT>

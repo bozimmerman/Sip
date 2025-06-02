@@ -1,11 +1,13 @@
 <!--
 TODO: logging .. Sip needs logging
+TODO: media library
 TODO: split-screen scroll-back
 TODO: FRAME MXP tag allows background image with opacity, perhaps IMAGE?
 TODO: mapper api
 TODO: add help for: GMCP, MSDP, MSP
 TODO: (optional) refactor to sep out triggers, alias, etc libs
-TODO: implement Xterm XTGETCAP
+TODO: implement Xterm XTGETCAP https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+TODO: see also: https://github.com/bozimmerman/Sip/issues/1
  -->
 <HTML>
 <HEAD>
@@ -35,6 +37,7 @@ TODO: implement Xterm XTGETCAP
 <SCRIPT LANGUAGE=JavaScript>
 function ConfigureSiplet()
 {
+	window.sipfs = new SipletFileSystem('SipletFileSystem');
 	document.getElementById('loadingmsg').style.visibility='hidden';
 	document.getElementById('inputarea').style.visibility='visible';
 	configureInput(document.getElementById('inputarea'), document.getElementById('input'));
@@ -53,7 +56,7 @@ function ConfigureSiplet()
 var loadableScripts = [
 	"js/config.js", "js/input.js", "js/menu.js", "js/tabs.js", "js/websock.js",
 	"js/util.js", "js/plugins.js", "js/ctxmenu.js", "js/binparser.js",
-	"js/ansiparser.js", "js/telnetparser.js", "js/textparser.js",
+	"js/ansiparser.js", "js/telnetparser.js", "js/textparser.js", "js/filesys.js",
 	"js/mspsupport.js", "js/mxpsupport.js", "js/siplet.js", "js/gmcp.js"
 ]
 function LoadJavaScript()

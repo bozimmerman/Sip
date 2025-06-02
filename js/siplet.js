@@ -46,7 +46,9 @@ function SipletWindow(windowName)
 	this.activeTimers = [];
 	this.lastStyle = '';
 	this.listeners = {};
+	this.logStream = null;
 	this.overflow = getConfig('window/overflow','');
+	this.sipfs = window.sipfs;
 	var me = this;
 	
 	this.fixOverflow = function()
@@ -105,6 +107,7 @@ function SipletWindow(windowName)
 		};
 		this.wsocket.onclose = function(event)  
 		{ 
+			me.closeLog();
 			me.flushWindow();
 			if(me.tab && me.tab.innerHTML.startsWith("Connecting"))
 				me.tab.innerHTML = 'Failed connection to ' + url;
@@ -167,6 +170,7 @@ function SipletWindow(windowName)
 
 	this.reset = function()
 	{
+		this.closeLog();
 		while (this.topWindow.children.length > 1) {
 			this.topWindow.removeChild(this.topWindow.lastChild);
 		}
@@ -305,7 +309,12 @@ function SipletWindow(windowName)
 				if(newText.length>0)
 				{
 					me.htmlBuffer += newText;
-					me.textBuffer += stripHtmlTags(newText);
+					var plain = stripHtmlTags(newText.replace(/<br\s*\/?>/gi, '\n'));
+					if(plain)
+					{
+						me.textBuffer += plain;
+						me.writeLog(plain);
+					}
 					if(newText.indexOf('<BR>')>=0)
 					{
 						if(me.htmlBuffer.length > 16384)
@@ -1098,6 +1107,38 @@ function SipletWindow(windowName)
 	{
 		return this.wsopened;
 	};
+	
+	this.openLog = function(filePath) {
+		try 
+		{
+			if(this.logStream)
+				this.closeLog();
+			const fs = require('fs');
+			this.logStream = fs.createWriteStream(filePath, {flags: 'w'});
+			this.tab.style.border='1px solid yellow';
+		} catch(e) {
+			this.tab.style.border='1px solid red';
+			console.error(e);
+			this.logStream = null;
+		}
+	};
+	
+	this.closeLog = function(filePath) {
+		this.tab.style.border='1px solid white';
+		if(this.logStream != null)
+			this.logStream.end();
+		this.logStream = null;
+	};
+	
+	this.writeLog = function(msg) {
+		if(this.logStream != null)
+		{
+			try {
+				this.logStream.write(msg);
+			} catch(e) {
+			}
+		}
+	};
 }
 
 function AddNewSipletTabByHostNPort(host, port)
@@ -1120,7 +1161,7 @@ function AddNewSipletTabByHostNPort(host, port)
 
 function AddNewSipletTabByPB(which)
 {
-	if(which=='')
+	if(!which)
 		return;
 	var ogwhich = ''+which;
 	var global = ogwhich.startsWith('g');
@@ -1186,6 +1227,7 @@ function AddNewSipletTab(url)
 	var siplet = new SipletWindow(windowName); // makes a deep copy
 	siplet.tab = AddNewTab();
 	siplet.tab.innerHTML = 'Connecting to ' + url + '...';
+	siplet.tab.siplet = siplet;
 	siplet.url = url;
 	window.siplets.push(siplet);
 	siplet.connect(url);
@@ -1241,7 +1283,11 @@ function CloseAllSiplets()
 
 function AutoConnect()
 {
-	AddNewSipletTabByPB(getConfig('/phonebook/auto','g0'));
+	var auto = getConfig('/phonebook/auto','-2');
+	if(auto === '-2')
+		menuConnect();
+	else
+		AddNewSipletTabByPB(auto);
 	boxFocus();
 }
 

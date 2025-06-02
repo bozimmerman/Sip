@@ -27,6 +27,10 @@ var menuData = [
 		{"n":"Plugins",
 		 "e":"window.currWin!=null && window.currWin.pb && window.currWin.pb.pb",
 		 "a":"javascript:menuPlugins('local');"},
+		{"n":"Capture",
+		 "v":"window.isElectron",
+		 "e":"window.currWin && window.currWin.wsopened",
+		 "a":"javascript:menuCapture();"},
 		{"n":"Disconnect",
 		 "e":"window.currWin!=null && window.currWin.wsopened",
 		 "a":"javascript:menuDisconnect();"},
@@ -109,6 +113,8 @@ function menumenu(obj, e, to)
 	{
 		var sub=subList[h];
 		hint+=sub['n']+'|';
+		if(('v' in sub)&&(sub['v'])&&(!eval(sub['v'])))
+			continue;
 		if(('e' in sub)&&(sub['e'])&&(!eval(sub['e'])))
 			href+='|';
 		else
@@ -303,6 +309,14 @@ function menuEntities(value)
 	populateDivFromUrl(content, 'dialogs/entities.htm');
 }
 
+function menuCapture()
+{
+	var content = getOptionWindow("Capture Log",60,40);
+	content.currWin = window.currWin;
+	if(content.currWin)
+		populateDivFromUrl(content, 'dialogs/capture.htm');
+}
+
 function menuHelp(f)
 {
 	var addBack = '';
@@ -361,3 +375,28 @@ function menuHelp(f)
 	});
 }
 
+document.onkeydown = function(e) {
+	if(e.altKey && (e.key == 'o'))
+	{
+		var win = window.currWin;
+		if(window.isElectron && win)
+		{
+			if(win.logStream != null)
+				win.closeLog();
+			else
+			{
+				
+				var captureFilename;
+				if(win.pb && win.pb.capture)
+					captureFilename = win.pb.capture;
+				else
+				{
+					var os = require('os');
+					var osPath = require('path');
+					captureFilename = osPath.join(os.tmpdir(),Siplet.NAME.toLowerCase()+'.log');
+				}
+				win.openLog(captureFilename);
+			}
+		}
+	}
+};

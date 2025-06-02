@@ -1,6 +1,9 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, contextBridge, ipcMain, dialog } = require('electron');
 const path = require('path');
 require('net')
+require('fs')
+const remoteMain = require('@electron/remote/main');
+remoteMain.initialize();
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -8,12 +11,13 @@ function createWindow() {
     height: 600,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: false
     },
   });
 
   win.loadFile('index.html');
   win.setMenu(null);
+  remoteMain.enable(win.webContents);
 
   const isDebug = process.argv.includes('--dev');
   if (isDebug) {

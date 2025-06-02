@@ -54,17 +54,10 @@
 	>
 </TD></TR>
 <TR><TD colspan="2">
-	<a ID="TRIGGERDELETE" href="javascript:document.getElementById('TRIGGERSROOT').trydeltrigger();">
-		<TABLE WIDTH=57 HEIGHT=23 BACKGROUND="images/lilButt.gif"  style="cursor:hand;display:inline;" 
-			ONCLICK="document.getElementById('TRIGGERSROOT').trydeltrigger();" 
-			TABINDEX=1 BORDER=0 CELLSPACING=0 CELLPADDING=0>
-		<TR VALIGN=CENTER><TD ALIGN=CENTER><FONT color=purple SIZE=-2>
-			<B>Delete</B></FONT>
-		</TD></TR></TABLE>
-	</a>
+	<SPAN ID="TRIGGERDELETE">${butt('Delete',"document.getElementById('TRIGGERSROOT').trydeltrigger();");}</SPAN>
 </TD></TR>
 </TABLE>
-${
+<SCRIPT>
 	var fixtriggerspage=function(){
 	if(document.getElementById('TRIGGERALLOWED'))
 	{
@@ -239,29 +232,31 @@ ${
 			var trigindex = Number(dd.value);
 			if(trigindex < 0)
 				return;
-			var curr=dd.selectedIndex;
-			dd.selectedIndex=-1;
-			dd.remove(curr);
-			for(var i=0;i < dd.options.length;i++)
-				if(Number(dd.options[i].value)>trigindex)
-					dd.options[i].value=(Number(dd.options[i].value)-1);
-			var deadt = triggers[trigindex];
-			triggers.splice(trigindex,1);
-			root.modifytriggers();
-			tname.value='';
-			tname.style.backgroundColor = 'white';
-			tpatt.value='';
-			tpatt.style.backgroundColor = 'white';
-			trege.checked=false;
-			truno.checked=false;
-			tacto.selectedIndex=-1;
-			tacto.style.backgroundColor = 'white';
-			taval.value='';
-			taval.style.backgroundColor = 'white';
-			tallo.value='';
-			delbutt.style.visibility='hidden';
+			SiConfirm('Delete '+dd.options[dd.selectedIndex].text+'?',function(){
+				var curr=dd.selectedIndex;
+				dd.selectedIndex=-1;
+				dd.remove(curr);
+				for(var i=0;i < dd.options.length;i++)
+					if(Number(dd.options[i].value)>trigindex)
+						dd.options[i].value=(Number(dd.options[i].value)-1);
+				var deadt = triggers[trigindex];
+				triggers.splice(trigindex,1);
+				root.modifytriggers();
+				tname.value='';
+				tname.style.backgroundColor = 'white';
+				tpatt.value='';
+				tpatt.style.backgroundColor = 'white';
+				trege.checked=false;
+				truno.checked=false;
+				tacto.selectedIndex=-1;
+				tacto.style.backgroundColor = 'white';
+				taval.value='';
+				taval.style.backgroundColor = 'white';
+				tallo.value='';
+				delbutt.style.visibility='hidden';
+			});
 		};
 	} else
 		setTimeout(fixtriggerspage,10);
 };setTimeout(fixtriggerspage,10);
-'';}
+</SCRIPT>
