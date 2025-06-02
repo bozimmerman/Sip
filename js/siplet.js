@@ -230,6 +230,7 @@ function SipletWindow(windowName)
 			this.htmlBuffer = reprocess + this.htmlBuffer;
 			this.numLines += brCount(this.htmlBuffer);
 			span.innerHTML = this.htmlBuffer;
+			updateMediaImagesInSpan(span);
 			this.window.appendChild(span);
 			this.process(reprocess);
 			this.htmlBuffer='';
