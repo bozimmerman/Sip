@@ -219,6 +219,12 @@ var TELNET = function(sipwin)
 								response = response.concat(StringToAsciiArray(sipwin.jobid));
 							}
 							else
+							if(varName == "UTF-8")
+							{
+								response = response.concat([typ]);
+								response = response.concat(StringToAsciiArray("UTF-8"));
+							}
+							else
 							if(varName == "CLIENT_NAME")
 							{
 								response = response.concat([typ]);
