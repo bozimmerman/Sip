@@ -86,7 +86,7 @@ var TELNET = function(sipwin)
 	
 	this.process = function(dat)
 	{
-		if(this.debug) logDat('teln', dat, TELOPT, NEWENV);
+		if(this.debug) logDat('teln', dat, TELOPT);
 		var response = [];
 		//var s='>' + new Date().getTime()+'>';for(var i=0;i<dat.length;i++)s+=dat[i]+',';console.log(s);
 		switch (dat[0])
@@ -195,7 +195,6 @@ var TELNET = function(sipwin)
 										varName += String.fromCharCode(c).toUpperCase();
 								}
 							}
-							console.log(':'+varName+':'+typ);
 							response = response.concat([TELOPT.IAC, TELOPT.SB, TELOPT.NEWENVIRON, NEWENV.IS]);
 							if((varName == 'USER')||(varName.length == 0))
 								response = response.concat(this.newEnvironVar(typ,"USER",(sipwin.pb && sipwin.pb.user)?sipwin.pb.user:''));
@@ -523,7 +522,7 @@ var TELNET = function(sipwin)
 		}
 		//var s='<' + new Date().getTime()+'<';for(var i=0;i<response.length;i++)s+=response[i]+',';console.log(s);
 		if(this.debug && response.length)
-			logDat('resp', response, TELOPT, NEWENV);
+			logDat('resp', response, TELOPT);
 		return new Uint8Array(response).buffer;
 	};
 
