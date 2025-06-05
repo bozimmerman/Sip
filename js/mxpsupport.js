@@ -1512,7 +1512,8 @@ var MXP = function(sipwin)
 						}
 						parentFrame.removeChild(frame);
 						delete this.frames[name];
-						sipwin.fixCharDimensions();
+						if(parentFrame.parentNode == sipwin.topWindow)
+							sipwin.fixCharDimensions();
 					}
 					else
 					{
@@ -1680,7 +1681,8 @@ var MXP = function(sipwin)
 							sipwin.window = newContentWindow;
 						newContainerDiv.sprops = sprops;
 						this.frames[name] = newContainerDiv;
-						sipwin.fixCharDimensions();
+						if(containerDiv == sipwin.topWindow.firstChild)
+							sipwin.fixCharDimensions();
 					}
 				}
 				else
@@ -1896,6 +1898,9 @@ var MXP = function(sipwin)
 							sipwin.window = dests.pop(); // the text window
 						else
 							sipwin.window = sipwin.topWindow.firstChild.firstChild;
+						setTimeout(function(){
+							DisplayFakeInput(null);
+						},1);
 					};
 					throw error;
 				}
