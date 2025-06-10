@@ -15,6 +15,7 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 - Timers: Cause some action to occur periodically, or after a delay. 
 - MXP editor: Customize your screen layout or colors, have a window for TELLs, etc. 
 - Media: Local images and sounds for your custom GUI.
+- Mapper: Built in API for building interactive visual area maps.
 - Plugins: Sweet bundles of all the above and media and more.
 
 ## Screenshots
