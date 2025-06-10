@@ -342,7 +342,7 @@ window.defElements = {
 	"NOBR": new MXPElement("NOBR", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"A": new MXPElement("A", "<A STYLE=\"&lcc;\" ONMOUSEOVER=\"&onmouseover;\" ONCLICK=\"&onclick;\" HREF=\"&href;\" TITLE=\"&hint;\">",
 			"HREF HINT EXPIRE TITLE=HINT STYLE ONMOUSEOUT ONMOUSEOVER ONCLICK", "", MXPBIT.HTML, "EXPIRE"),
-	"SEND": new MXPElement("SEND", "<A STYLE=\"&lcc;\" HREF=\"&href;\" ONMOUSEOUT=\"delayhidemenu();\" ONCLICK=\"&onclick;\" TITLE=\"&hint;\">", 
+	"SEND": new MXPElement("SEND", "<A STYLE=\"&lcc;\" HREF=\"&href;\" ONMOUSEOUT=\"ContextDelayHide();\" ONCLICK=\"&onclick;\" TITLE=\"&hint;\">", 
 			"HREF HINT PROMPT EXPIRE STYLE", "", MXPBIT.SPECIAL, "EXPIRE"), // special done
 	"EXPIRE": new MXPElement("EXPIRE", "", "NAME", "", MXPBIT.NOTSUPPORTED),
 	"VERSION": new MXPElement("VERSION", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
@@ -1279,7 +1279,7 @@ var MXP = function(sipwin)
 				}
 				href = href.replaceAll("'", "\\'");
 				hint = newHint.replaceAll("'", "\\'");
-				var func = "contextmenu(this, event, '"+href+"','"+hint+"',"+prompt+");";
+				var func = "ContextMenu(this, event, '"+href+"','"+hint+"',"+prompt+");";
 				E.setAttributeValue("ONCLICK", "return "+func);
 			}
 			else
@@ -1288,7 +1288,7 @@ var MXP = function(sipwin)
 				E.setAttributeValue("HREF", "javascript:goDefault(0);");
 				href = href.replaceAll("'", "\\'");
 				hint = newHint.replaceAll("'", "\\'");
-				var func = "contextmenu(this, event, '"+href+"','"+hint+"',"+prompt+");";
+				var func = "ContextMenu(this, event, '"+href+"','"+hint+"',"+prompt+");";
 				E.setAttributeValue("ONCLICK", "return "+func);
 			}
 		}
@@ -1515,7 +1515,7 @@ var MXP = function(sipwin)
 						parentFrame.removeChild(frame);
 						delete this.frames[name];
 						if(parentFrame.parentNode == sipwin.topWindow)
-							sipwin.fixCharDimensions();
+							sipwin.resizeTermWindow();
 					}
 					else
 					{
@@ -1699,7 +1699,7 @@ var MXP = function(sipwin)
 						newContainerDiv.sprops = sprops;
 						this.frames[name] = newContainerDiv;
 						if(containerDiv == sipwin.topWindow.firstChild)
-							sipwin.fixCharDimensions();
+							sipwin.resizeTermWindow();
 					}
 				}
 				else
@@ -1725,11 +1725,13 @@ var MXP = function(sipwin)
 						titleBar.style.color = 'black';
 						contentTop = "20px";
 						titleBar.innerHTML = '&nbsp;'+title;
+						MakeDraggable(newTopWindow,titleBar);
 					}
 					else
 					{
 						titleBar = document.createElement('div');
 						titleBar.style.cssText = "position:absolute;top:0px;left:0px;height:0px;width:0px;";
+						MakeDraggable(newTopWindow);
 					}
 					var contentWindow = document.createElement('div');
 					contentWindow.style.cssText = "position:absolute;top:"+contentTop+"px;left:0%;height:calc(100% - "+contentTop+");width:100%;";
@@ -1745,7 +1747,7 @@ var MXP = function(sipwin)
 					}
 					else
 					if((scrolling!=null) && (scrolling.toLowerCase() == 'x'))
-					    contentWindow.style.overflowX = 'auto';
+						contentWindow.style.overflowX = 'auto';
 					else
 					{
 						if((scrolling!=null) && (scrolling.toLowerCase() == 'y'))
