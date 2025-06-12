@@ -103,6 +103,7 @@ Sip is released under the [Apache 2.0 License](LICENSE).
 
 - Built with [Electron](https://www.electronjs.org/) for cross-platform desktop support.
 - Thanks to the CoffeeMUD community for their support and feedback.
+- CodeMirror.js is included under the MIT License. https://github.com/codemirror/CodeMirror.
 
 ## Contact
 
