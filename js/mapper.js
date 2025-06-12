@@ -28,29 +28,30 @@ window.DirCodeNames =
 window.DirNameNums =
 {
 	north: 1,
-	south: 6,
+	northeast: 2,
+	northwest: 3,
 	east: 4,
 	west: 5,
+	south: 6,
+	southeast: 7,
+	southwest: 8,
 	up: 9,
 	down: 10,
 	in: 11,
 	out: 12,
-	northeast: 2,
-	northwest: 3,
-	southeast: 7,
-	southwest: 8,
 	northup: 13,
-	northdown: 16,
-	southup: 15,
 	southdown: 14,
+	southup: 15,
+	northdown: 16,
 	eastup: 17,
-	eastdown: 20,
+	westdown: 18,
 	westup: 19,
-	westdown: 18
+	eastdown: 20
 };
 
 window.DirNumCodes = [
-	'', 'n', 'ne', 'nw', 'e', 'w', 
+	'', 
+	'n', 'ne', 'nw', 'e', 'w', 
 	's', 'se', 'sw', 'u', 'd',
 	'i', 'o', 'nu', 'sd', 'su',
 	'nd', 'eu', 'wd', 'wu', 'ed'
@@ -135,7 +136,7 @@ window.MapEnvs = {
 	269: { r:70, g:130, b:180, a:255 },
 	270: { r:0, g:128, b:128, a:255 },
 	271: { r:240, g:230, b:140, a:255 },
-	272: { r:47, g:79, b:79, a:255 },
+	272: { r:47, g:79, b:79, a:255 }
 }
 
 window.MapLineStyles = ['solid', 'dash', 'dot', 'dashdot'];
@@ -489,10 +490,23 @@ function Mapper(sipwin)
 		}
 		return true;
 	}
+
 	this.centerview = function(roomId) {
-		if(roomId in this.rooms)
+		if(roomId == null) {
+			this.centerView = null;
+			if(this.mapWidget && this.mapWidget.titleBar)
+				this.mapWidget.titleBar.textContent = 'Map';
+		} else if(roomId in this.rooms) {
+			var room = this.rooms[roomId];
+			if(this.mapWidget 
+			&& this.mapWidget.titleBar 
+			&& (room.areaId in this.areas)) {
+				this.mapWidget.titleBar.textContent = this.areas[room.areaId].name;
+			}
 			this.centerView = roomId;
+		}
 	};
+
 	this.clearAreaUserData = function(areaId) {
 		if(areaId in this.areas && this.areas[areaId].userData) {
 			delete this.areas[areaId].userData;
@@ -500,6 +514,7 @@ function Mapper(sipwin)
 		}
 		return false;
 	};
+
 	this.clearAreaUserDataItem = function(areaId, key) {
 		if(key && areaId in this.areas && this.areas[areaId].userData) {
 			var area = this.areas[areaId];
@@ -747,6 +762,7 @@ function Mapper(sipwin)
 		if(typeof x === 'string' && y === undefined)
 		{
 			var canvas = document.createElement('canvas');
+			var titleBar = null;
 			if(!(x in sipwin.mxp.frames))
 			{
 				console.error("no frame: "+x);
@@ -774,7 +790,7 @@ function Mapper(sipwin)
 			container.style.height = targetHeight + 'px';
 			container.style.border = "1px solid white";
 			container.style.backgroundColor = 'black';
-			var titleBar = document.createElement('div');
+			titleBar = document.createElement('div');
 			titleBar.style.height = "20px";
 			titleBar.style.backgroundColor = "white";
 			titleBar.style.color = "black";
@@ -792,6 +808,17 @@ function Mapper(sipwin)
 			canvas.style.backgroundColor = 'black';
 			sipwin.topWindow.appendChild(container);
 			MakeDraggable(container, titleBar);
+			var resizeDebouncer = null;
+			container.addEventListener('resize', function() {
+				if(resizeDebouncer == null)
+					resizeDebouncer =setTimeout(function() {
+						var calced = getComputedStyle(container);
+						canvas.width = parseFloat(calced.width);
+						canvas.height = parseFloat(calced.height);
+						self.updateMap();
+						resizeDebouncer = null;
+					}, 500);
+			});
 		}
 		
 		var ctx = canvas.getContext('2d');
@@ -899,7 +926,7 @@ function Mapper(sipwin)
 			var rect = canvas.getBoundingClientRect();
 			var clickX = event.clientX - rect.left;
 			var clickY = event.clientY - rect.top;
-			var { rooms } = self.mapWidget.layout;
+			var { rooms} = self.mapWidget.layout;
 			var closestRoomId = null;
 			var minDist = Infinity;
 			for (var roomId in rooms) {
@@ -952,11 +979,11 @@ function Mapper(sipwin)
 						else
 							self.mapWidget.selectedRooms.push(closestRoomId);
 					}
-		        }
+				}
 				else
 				{
-					self.centerView = closestRoomId;
-					if (self.mapWidget.selectedRooms && self.mapWidget.selectedRooms.length > 0)
+					self.centerview(closestRoomId);
+					if (self.mapWidget.selectedRooms && (self.mapWidget.selectedRooms.length > 0))
 						self.clearMapSelection();
 				}
 				event.stopPropagation();
@@ -967,14 +994,19 @@ function Mapper(sipwin)
 			}
 		};
 		var menuHandler = function(e) {
-			if (!self.mapWidget.layout || !self.mapWidget.layout.rooms)
-				return;
 			if(self.mapWidget.tooltip)
 				self.mapWidget.tooltip.style.display = 'none';
 			var rect = canvas.getBoundingClientRect();
 			var clickX = e.clientX - rect.left;
 			var clickY = e.clientY - rect.top;
-			var { rooms, tileSize, offsetX, offsetY } = self.mapWidget.layout;
+			var rooms = {}, tileSize = 1, offsetX = 1, offsetY =1 ;
+			if(self.mapWidget.layout && self.mapWidget.layout.rooms)
+			{
+				rooms = self.mapWidget.layout.rooms;
+				tileSize = self.mapWidget.layout.tileSize;
+				offsetX = self.mapWidget.layout.offsetX;
+				offsetY = self.mapWidget.layout.offsetY;
+			}
 			var closestRoomId = null;
 			var closestLabelId = null;
 			var minDist = Infinity;
@@ -1086,6 +1118,39 @@ function Mapper(sipwin)
 				return menuItems;
 			};
 			
+			if (!self.mapWidget.layout || !self.rooms || Object.keys(self.rooms).length === 0) 
+			{
+				var menus = [
+					{
+						"n": "Create Area",
+						"a": function(event) {
+							   SiPrompt('Enter area name:',function(name){
+								if(name) {
+									var areaId = self.addAreaName(name);
+									self.updateMap();
+								}
+							})}
+					},
+					{
+						"n": "Add Room",
+						"a": function(event) {
+								SiPrompt('Enter area ID or name:',function(areaInput){
+							 		var areaId = self.addAreaName(areaInput);
+							 	if(areaId) {
+							 		var id = self.addRoom(self.createRoomId(), areaId);
+							 		if(id) {
+							 			self.setRoomCoordinates(id, 0, 0, 0);
+							 			self.centerview(id);
+							 			self.updateMap();
+							 		}
+							 	}
+							 })}
+					}
+				];
+				menus = menus.concat(buildCustomMenu('empty'));
+				DropDownMenu(e, e.clientX, e.clientY, 200, 12, menus);
+			}
+			else
 			if (closestRoomId) 
 			{
 				if((typeof closestRoomId == 'string')
@@ -1093,329 +1158,359 @@ function Mapper(sipwin)
 					closestRoomId = closestRoomId.replace('\'','\\\''); 
 				var menu = [
 					{"n":"Set as Current Room",
-					 "a":"javascript:var map=window.currWin.mapper;" 
-					 	+"map.clearMapSelection();"
-					 	+"map.centerview('"+closestRoomId+"');"
-					 	+"map.updateMap();",
+					 "a":function(event) { 
+					 	self.clearMapSelection();
+					 	self.centerview(closestRoomId);
+					 	self.updateMap();},
 					 "e":""},
 					{"n":"Speedwalk to Room",
-					 "a": "javascript:var map=window.currWin.mapper;debugger;"
-						  +"map.clearMapSelection();"
-						  +"var dirString = map.getPath(map.getPlayerRoom(), '" + closestRoomId + "');"
-						  +"if (dirString) map.speedwalk(dirString, false, 0, true);",
+					 "a": function(event) {
+						  self.clearMapSelection();
+						  var dirString = self.getPath(self.getPlayerRoom(), closestRoomId);
+						  if (dirString) self.speedwalk(dirString, false, 0, true);},
 					 "e":""},
 					{"n":"Add Exit",
 					 "c": false,
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"var subMenu = [];"
-					 	+"map.clearMapSelection();"
-					 	+"for(var dir in window.DirNameNums) {"
-					 	+"  var exits = map.getRoomExits('"+closestRoomId+"');"
-					 	+"  var dirCode = window.DirNumCodes[window.DirNameNums[dir]];"
-					 	+"  if(!exits[dirCode])"
-					 	+"	subMenu.push({n:dir,e:'',a:'javascript:"
-					 	+"		SiPrompt(\\'Enter Target Room Id\\',function(i){"
-					 	+"		  if(i && window.currWin.mapper.roomExists(i)) {"
-					 	+"			 window.currWin.mapper.setExit(\\'"+closestRoomId+"\\',i,\\''+dirCode+'\\');"
-					 	+"			 window.currWin.mapper.updateMap();"
-					 	+"		  }"
-					 	+"	})'});"
-					 	+"}"
-					 	+"subMenu.push({n:'special',e:'',a:'javascript:"
-					 	+"		SiPrompt(\\'Enter Target Room Id\\',function(id){"
-					 	+"		  if(id && window.currWin.mapper.roomExists(id)) {"
-						+"			SiPrompt(\\'Enter Move Command\\',function(cmd){"
-					 	+"				if(cmd) {"
-					 	+"				  window.currWin.mapper.addSpecialExit(\\'"+closestRoomId+"\\',id,cmd);"
-					 	+"				  window.currWin.mapper.updateMap();"
-					 	+"				}});}});"
-					 	+"'});"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);"
-					 	+"",
+					 "a":function(event) {
+					 	var subMenu = [];
+					 	self.clearMapSelection();
+					 	for(var dir in window.DirNameNums) {
+					 	  var exits = self.getRoomExits(closestRoomId);
+					 	  var dirCode = window.DirNumCodes[window.DirNameNums[dir]];
+					 	  if(!exits[dirCode])
+					 		subMenu.push({n:dir,e:'',a:(function(dirCode){return function(event) {
+					 			SiPrompt('Enter Target Room Id',function(i){
+					 			  if(i && window.currWin.mapper.roomExists(i)) {
+					 				 window.currWin.mapper.setExit(closestRoomId,i,dirCode);
+					 				 window.currWin.mapper.updateMap();
+					 			  }
+					 		})}})(dirCode)
+					 		});
+					 	}
+					 	subMenu.push({n:'special',e:'',a:(function(dirCode){return function(event) {
+					 			SiPrompt('Enter Target Room Id',function(id){
+					 			  if(id && window.currWin.mapper.roomExists(id)) {
+									SiPrompt('Enter Move Command',function(cmd){
+					 					if(cmd) {
+					 					  window.currWin.mapper.addSpecialExit(closestRoomId,id,cmd);
+					 					  window.currWin.mapper.updateMap();
+					 					}});}});
+					 		}})(dirCode)
+					 	});
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);
+					 	},
 					 "e":""},
 					{"n":"Remove Exit",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"var subMenu = [];"
-					 	+"var exits = map.getRoomExits('"+closestRoomId+"');"
-					 	+"for(var k in exits) {"
-					 	+"  var dirName = window.DirCodeNames[k];"
-					 	+"  subMenu.push({n:dirName,a:'javascript:window.currWin.mapper.setExit(\\'"+closestRoomId+"\\',-1,\\''+k+'\\'); window.currWin.mapper.updateMap();'});"
-					 	+"}"
-					 	+"var sexits = map.getSpecialExitsSwap('"+closestRoomId+"');"
-					 	+"for(var k in sexits)"
-					 	+"  subMenu.push({n:'special: '+k,a:'javascript:window.currWin.mapper.removeSpecialExit(\\'"+closestRoomId+"\\',\\''+k+'\\');'});"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	var subMenu = [];
+					 	var exits = self.getRoomExits(closestRoomId);
+					 	for(var k in exits) {
+					 	  var dirName = window.DirCodeNames[k];
+					 	  subMenu.push({n:dirName,a:(function(dirCode){return function(event) {
+							   self.setExit(closestRoomId,-1,dirCode); 
+							   window.currWin.mapper.updateMap();}})(k)});
+					 	}
+					 	var sexits = self.getSpecialExitsSwap(closestRoomId);
+					 	for(var k in sexits)
+					 	  subMenu.push({n:'special: '+k,a:(function(dirCode){return function(event) {
+							   self.removeSpecialExit(closestRoomId,dirCode);}})(k)});
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);},
 					 "e":"window.currWin.mapper.rooms['"+closestRoomId+"'].exits.length"},
 					{"n":"Lock/Unlock Exit",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"var subMenu = [];"
-					 	+"var exits = map.getRoomExits('"+closestRoomId+"');"
-					 	+"for(var k in exits) {"
-					 	+"  var dirName = window.DirCodeNames[k];"
-					 	+"  subMenu.push({n:((map.hasExitLock('"+closestRoomId+"',k)?'Unlock ':'Lock ')+dirName),"
-					 	+"				a:'javascript:window.currWin.mapper.lockExit(\\'"+closestRoomId+"\\',\\''+k+'\\',!window.currWin.mapper.hasExitLock(\\'"+closestRoomId+"\\',\\''+k+'\\')); window.currWin.mapper.updateMap();'});"
-					 	+"}"
-					 	+"var sexits = map.getSpecialExitsSwap('"+closestRoomId+"');"
-					 	+"for(var k in sexits)"
-					 	+"  subMenu.push({n:'special: '+k,a:'javascript:window.currWin.mapper.lockSpecialExit(\\'"+closestRoomId+"\\',\\''+sexits[k]+'\\',\\''+k+'\\',!window.currWin.mapper.hasExitLock(\\'"+closestRoomId+"\\',\\''+k+'\\'));'});"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	var subMenu = [];
+					 	var exits = self.getRoomExits(closestRoomId);
+					 	for(var k in exits) {
+					 	  var dirName = window.DirCodeNames[k];
+					 	  subMenu.push({n:((self.hasExitLock(closestRoomId,k)?'Unlock ':'Lock ')+dirName),
+					 					a:(function(dirCode){return function(event) {
+											 self.lockExit(closestRoomId,dirCode,!self.hasExitLock(closestRoomId,dirCode));
+											 self.updateMap();}})(k)});
+					 	}
+					 	var sexits = self.getSpecialExitsSwap(closestRoomId);
+					 	for(var k in sexits)
+					 	  subMenu.push({n:'special: '+k,a:(function(dirCode){return function(event) {
+							   self.lockSpecialExit(closestRoomId,sexits[dirCode],dirCode,!self.hasExitLock(closestRoomId,dirCode));}})(k)});
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);},
 					 "e":"window.currWin.mapper.rooms['"+closestRoomId+"'].exits.length"},
 					{"n":"Set Door Status",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"var subMenu = [];"
-					 	+"var exits = map.getRoomExits('"+closestRoomId+"');"
-					 	+"var doors = map.getDoors('"+closestRoomId+"');"
-					 	+"var doorMap = doors.reduce((obj, item) => { obj[item.direction] = item.door; return obj;}, {});"
-					 	+"for(var k in exits) {"
-					 	+"  var dirName = window.DirCodeNames[k];"
-					 	+"  var doorStatus = doorMap[k];"
-					 	+"  if(!(k in doorMap))"
-						+"	subMenu.push({n:'Add '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',0); window.currWin.mapper.updateMap();'});"
-						+"  else if (doorStatus == 0) {"
-						+"	subMenu.push({n:'Remove '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',-1); window.currWin.mapper.updateMap();'});"
-						+"	subMenu.push({n:'Close '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',1); window.currWin.mapper.updateMap();'});"
-						+"  } else if (doorStatus == 1) {"
-						+"	subMenu.push({n:'Remove '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',-1); window.currWin.mapper.updateMap();'});"
-						+"	subMenu.push({n:'Open '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',0); window.currWin.mapper.updateMap();'});"
-						+"	subMenu.push({n:'Lock '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',2); window.currWin.mapper.updateMap();'});"
-						+"  } else if (doorStatus == 2) {"
-						+"	subMenu.push({n:'Remove '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',-1); window.currWin.mapper.updateMap();'});"
-						+"	subMenu.push({n:'Unlock '+dirName+' door',"
-						+"					a:'javascript:window.currWin.mapper.setDoor(\\'"+closestRoomId+"\\',\\''+k+'\\',1); window.currWin.mapper.updateMap();'});"
-						+"  }"
-					 	+"}"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	var subMenu = [];
+					 	var exits = self.getRoomExits(closestRoomId);
+					 	var doors = self.getDoors(closestRoomId);
+					 	var doorMap = doors.reduce(function(obj, item){ 
+							 obj[item.direction] = item.door; 
+							 return obj;
+						}, {});
+					 	for(var k in exits) {
+					 	  var dirName = window.DirCodeNames[k];
+					 	  var doorStatus = doorMap[k];
+					 	  if(!(k in doorMap))
+							subMenu.push({n:'Add '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,0); 
+												window.currWin.mapper.updateMap();}})(k)});
+						  else if (doorStatus == 0) {
+							subMenu.push({n:'Remove '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,-1); 
+												window.currWin.mapper.updateMap();}})(k)});
+							subMenu.push({n:'Close '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,1); 
+												window.currWin.mapper.updateMap();}})(k)});
+						  } else if (doorStatus == 1) {
+							subMenu.push({n:'Remove '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,-1); 
+												window.currWin.mapper.updateMap();}})(k)});
+							subMenu.push({n:'Open '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,0); 
+												window.currWin.mapper.updateMap();}})(k)});
+							subMenu.push({n:'Lock '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,2); 
+												window.currWin.mapper.updateMap();}})(k)});
+						  } else if (doorStatus == 2) {
+							subMenu.push({n:'Remove '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,-1); 
+												window.currWin.mapper.updateMap();}})(k)});
+							subMenu.push({n:'Unlock '+dirName+' door',
+											a:(function(dirCode){return function(event) {
+												self.setDoor(closestRoomId,dirCode,1); 
+												window.currWin.mapper.updateMap();}})(k)});
+						  }
+					 	}
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);},
 					 "e":"window.currWin.mapper.rooms['"+closestRoomId+"'].exits.length"
 					},
 					{"n":"Set Exit Weight",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"var subMenu = [];"
-					 	+"var exits = map.getRoomExits('"+closestRoomId+"');"
-					 	+"for(var k in exits) {"
-					 	+"  var dirName = window.DirCodeNames[k];"
-						+"	subMenu.push({n:dirName,"
-						+"					a:'javascript:var map=window.currWin.mapper;"
-					 	+"					SiPrompt(\\'Enter Exit Weight\\',function(i){"
-					 	+"						if(!isNumber(i)) return;"
-						+"						map.setExitWeight(\\'"+closestRoomId+"\\',\\''+k+'\\',Number(i)); "
-						+"						map.updateMap();});"
-						+"'});"
-					 	+"}"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	var subMenu = [];
+					 	var exits = self.getRoomExits(closestRoomId);
+					 	for(var k in exits) {
+					 	  var dirName = window.DirCodeNames[k];
+							subMenu.push({n:dirName,
+											a:(function(dirCode){return function(event) {
+					 						SiPrompt('Enter Exit Weight',function(i){
+					 							if(!isNumber(i)) return;
+												self.setExitWeight(closestRoomId,dirCode,Number(i)); 
+												self.updateMap();
+											});
+										}})(k)});
+					 	}
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);},
 					 "e":"window.currWin.mapper.rooms['"+closestRoomId+"'].exits.length"
 					},
 					{"n":"Set Room ...",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"var js='javascript:var map=window.currWin.mapper;'"
-					 	+"		+'var sel=map.getMapSelection();'"
-					 	+"		+'var rid=sel.length>0?sel:[\\'"+closestRoomId+"\\'];'"
-					 	+"		+'var msg=(rid.length>1?(rid.length+\\' rooms\\'):(\\'room \\'+rid[0]));';"
-					 	+" "
-					 	+"var subMenu = [];"
-						+"	subMenu.push({n:'Name',"
-						+"		a:js+'SiPrompt(\\'Enter name for \\'+msg+\\':\\',function(i) { "
-						+"				map.setRoomName(rid,i);"
-						+"				map.updateMap();"
-						+"		  });"
-						+"		'});"
-						+"  subMenu.push({n:'Weight',"
-					 	+"		a:js+'SiPrompt(\\'Enter weight for \\'+msg+\\':\\',function(i){"
-					 	+"			if (isNumber(i)) { "
-					 	+"				map.setRoomWeight(rid,Number(i));"
-					 	+"				map.updateMap();"
-					 	+"			}"
-					 	+"		  });"
-					 	+"		'});"
-					 	+"  subMenu.push({n:'Area',"
-					 	+"		a:js+'SiPrompt(\\'Enter area id/name for \\'+msg+\\':\\',function(i){"
-					 	+"			if (i) {"
-					 	+"				map.setRoomArea(rid,i);"
-					 	+"				map.updateMap();"
-					 	+"			}"
-					 	+"		  });"
-					 	+"		'});"
-					 	+"  subMenu.push({n:'Coordinates',"
-					 	+"		a:js+'SiPrompt(\\'Enter coordinates (x,y,z) for \\'+msg+\\':\\',function(i){"
-					 	+"			var regex = /^-?\\d+,-?\\d+,-?\\d+$/;" 
-					 	+"  		if (regex.test(i)) { "
-					 	+"				var xyz = i.split(\\',\\').map(Number);"
-					 	+"				map.setRoomCoordinates(rid,xyz[0],xyz[1],xyz[2]);"
-					 	+"				map.updateMap();"
-					 	+"  		}"
-					 	+"		 });"
-						+"		'});"
-					 	+"  subMenu.push({n:'Char',"
-					 	+"		a:js+'SiPrompt(\\'Enter character for \\'+msg+\\':\\',function(i){"
-					 	+"			if(!i) return;" 
-					 	+"			SiColorPicker(\\'Enter char color for \\'+msg+\\':\\',function(c){" 
-					 	+"				map.setRoomChar(rid,i.charAt(0));"
-					 	+"				map.setRoomCharColor(rid,c);"
-					 	+"	  			map.updateMap();"
-					 	+" 			});"
-					 	+"		 });"
-						+"		'});"
-					 	+"  subMenu.push({n:map.roomLocked('"+closestRoomId+"')?'Unlock':'Lock',"
-						+"		a:js+'if(map.roomLocked(\\'"+closestRoomId+"\\'))"
-						+"				map.lockRoom(rid,false);"
-						+"			  else"
-						+"				map.lockRoom(rid,true);"
-						+"		'});"
-					 	+"  subMenu.push({n:'Highlight',"
-					 	+"		a:js+'var room = map.rooms[\\'"+closestRoomId+"\\'];"
-					 	+"			if(room.highlight) {"
-					 	+"				map.unHighlightRoom(rid);map.updateMap();"
-					 	+"			} else "
-					 	+"				SiColorPicker(\\'Select first color:\\',function(color1) {" 
-					 	+"					SiColorPicker(\\'Select second color:\\',function(color2) {" 
-					 	+"						map.highlightRoom(rid, color1[0], color1[1], color1[2], color2[0], color2[1], color2[2], null, color1[3], color2[3]);"
-					 	+"						map.updateMap();"
-					 	+"  				},true);"
-					 	+"				},true);"
-						+"		'});"
-					 	+"  subMenu.push({n:'Color',"
-						+"		a:js+'"
-						+"			var colors = Object.values(window.MapEnvs).map(env => [env.r, env.g, env.b])"
-						+"				.concat(Object.values(window.MapBlock.envs).map(env => [env.r, env.g, env.b]));"
-						+"			SiSwatchPicker(\\'Select color of \\'+msg+\\':\\',colors,function(color){"
-						+"				var envId = null;"
-						+"				for (var id in window.MapEnvs) {"
-						+"					var env = window.MapEnvs[id];"
-						+"					if (env.r === color[0] && env.g === color[1] && env.b === color[2]) {"
-						+"						envId = id;"
-						+"						break;"
-						+"					}"
-						+"				}"
-						+"				if (!envId) {"
-						+"					for (var id in window.MapBlock.envs) {"
-						+"						var env = window.MapBlock.envs[id];"
-						+"						if (env.r === color[0] && env.g === color[1] && env.b === color[2]) {"
-						+"							envId = id;"
-						+"							break;"
-						+"						}"
-						+"					}"
-						+"				}"
-					 	+"				if (envId) {"
-					 	+"  				map.setRoomEnv(rid,envId);"
-					 	+"					map.updateMap(); };"
-					 	+"			});"
-						+"		'});"
-					 	+"  subMenu.push({n:'User Data',"
-						+"		a:js+'"
-					 	+"			var all = map.getAllRoomUserData(rid);"
-					 	+"			var ud = \\'\\'; for(var k in all)"
-					 	+"				ud += \\'<font color=yellow>\\'+escapeHTML(k+\\'=\\'+all[k])+\\'</font><br>\\';"
-					 	+"			SiPrompt(ud+\\'<p>Enter variable to add/edit/remove like var=value:\\',function(i){"
-					 	+"  			var x = i.indexOf(\\'=\\');"
-					 	+"  			if(x>=0) { "
-					 	+"					var v = i.substr(0,x).trim(); var l = i.substr(x+1).trim();"
-					 	+"					if(!l) l=null;"
-					 	+"					if(v) map.setRoomUserData(rid,v,l);"
-					 	+"  			}"
-					 	+"			});"
-						+"		'});"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);"
-					 	+"",
+					 "a":function(event) {
+			 			var sel=self.getMapSelection();
+			 			var rid=sel.length>0?sel:[closestRoomId];
+			 			var msg=(rid.length>1?(rid.length+' rooms'):('room '+rid[0]));;
+					 	var subMenu = [];
+							subMenu.push({n:'Name',
+								a:function(event) {
+									SiPrompt('Enter name for '+msg+':',function(i) { 
+										self.setRoomName(rid,i);
+										self.updateMap();
+								  })}
+								});
+						  subMenu.push({n:'Weight',
+					 			a:function(event) {
+					 				SiPrompt('Enter weight for '+msg+':',function(i){
+					 				if (isNumber(i)) { 
+					 					self.setRoomWeight(rid,Number(i));
+					 					self.updateMap();
+					 				}
+					 			  });
+					 			}});
+					 	  subMenu.push({n:'Area',
+					 			a:function(event) {
+					 				SiPrompt('Enter area id/name for '+msg+':',function(i){
+					 				if (i) {
+					 					self.setRoomArea(rid,i);
+					 					self.updateMap();
+					 				}
+					 			  });
+					 			}});
+					 	  subMenu.push({n:'Coordinates',
+					 			a:function(event) {
+					 				SiPrompt('Enter coordinates (x,y,z) for '+msg+':',function(i){
+					 				var regex = /^-?\\d+,-?\\d+,-?\\d+$/; 
+					 	  			if (regex.test(i)) { 
+					 					var xyz = i.split(',').map(Number);
+					 					self.setRoomCoordinates(rid,xyz[0],xyz[1],xyz[2]);
+					 					self.updateMap();
+					 	  			}
+					 			 });
+								}});
+					 	  subMenu.push({n:'Char',
+					 			a:function(event) {
+					 				SiPrompt('Enter character for '+msg+':',function(i){
+					 				if(!i) return;
+					 				SiColorPicker('Enter char color for '+msg+':',function(c){ 
+					 					self.setRoomChar(rid,i.charAt(0));
+					 					self.setRoomCharColor(rid,c);
+					 		  			self.updateMap();
+					 	 			});
+					 			 });
+								}});
+					 	  subMenu.push({n:self.roomLocked(closestRoomId)?'Unlock':'Lock',
+								a:function(event) {
+									if(self.roomLocked(closestRoomId))
+										self.lockRoom(rid,false);
+									  else
+										self.lockRoom(rid,true);
+								}});
+					 	  subMenu.push({n:'Highlight',
+					 			a:function(event) {
+					 				var room = self.rooms[closestRoomId];
+					 				if(room.highlight) {
+					 					self.unHighlightRoom(rid);
+					 					self.updateMap();
+					 				} else 
+					 					SiColorPicker('Select first color:',function(color1) {
+					 						SiColorPicker('Select second color:',function(color2) {
+					 							self.highlightRoom(rid, color1[0], color1[1], color1[2], color2[0], color2[1], color2[2], null, color1[3], color2[3]);
+					 							self.updateMap();
+					 	  					},true);
+					 					},true);
+								}});
+					 	  subMenu.push({n:'Color',
+								a:function(event) {
+									var colors = Object.values(window.MapEnvs).map(env => [env.r, env.g, env.b])
+										.concat(Object.values(window.MapBlock.envs).map(env => [env.r, env.g, env.b]));
+									SiSwatchPicker('Select color of '+msg+':',colors,function(color){
+										var envId = null;
+										for (var id in window.MapEnvs) {
+											var env = window.MapEnvs[id];
+											if (env.r === color[0] && env.g === color[1] && env.b === color[2]) {
+												envId = id;
+												break;
+											}
+										}
+										if (!envId) {
+											for (var id in window.MapBlock.envs) {
+												var env = window.MapBlock.envs[id];
+												if (env.r === color[0] && env.g === color[1] && env.b === color[2]) {
+													envId = id;
+													break;
+												}
+											}
+										}
+					 					if (envId) {
+					 	  					self.setRoomEnv(rid,envId);
+					 						self.updateMap(); 
+					 					};
+					 				});
+								}});
+					 	  subMenu.push({n:'User Data',
+								a:function(event) {
+					 				var all = self.getAllRoomUserData(rid);
+					 				var ud = ''; 
+					 				for(var k in all)
+					 					ud += '<font color=yellow>'
+					 						+escapeHTML(k+'='+all[k])
+					 						+'</font><br>';
+					 				SiPrompt(ud+'<p>Enter variable to add/edit/remove like var=value:',
+					 					function(i){
+							 	  			var x = i.indexOf('=');
+							 	  			if(x>=0) { 
+						 						var v = i.substr(0,x).trim(); var l = i.substr(x+1).trim();
+						 						if(!l) l=null;
+						 						if(v) 
+						 							self.setRoomUserData(rid,v,l);
+							 	  			}
+						 				}
+						 			);
+								}});
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);
+					 	},
 					 "e":""},
 					{"n":"Delete Room",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"var sel=map.getMapSelection();"
-					 	+"var rid=sel.length>0?sel:['"+closestRoomId+"'];"
-					 	+"var msg=rid.length>1?(''+rid.length+' rooms'):('room '+rid[0]);"
-					 	+"SiConfirm('Delete '+msg+'?', function(){"
-					 	+"map.deleteRoom(rid);" 
-					 	+"map.updateMap();"
-					 	+"});",
+					 "a":function(event) {
+					 	var sel=self.getMapSelection();
+					 	var rid=sel.length>0?sel:[closestRoomId];
+					 	var msg=rid.length>1?(''+rid.length+' rooms'):('room '+rid[0]);
+					 	SiConfirm('Delete '+msg+'?', function(){
+						 	self.deleteRoom(rid); 
+						 	self.updateMap();
+					 	})},
 					 "e":""},
 					{"n":"Add Custom Line",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"var subMenu = [];"
-					 	+"var lines = map.getCustomLines(map.getPlayerRoom());"
-					 	+"for(var dir in window.DirNameNums) {"
-					 	+"  var dirNum = window.DirNameNums[dir];"
-					 	+"  var dirCode = window.DirNumCodes[dirNum];"
-					 	+"  if(!lines[dirCode])"
-					 	+"	subMenu.push({n:dir,e:'',a:'javascript:"
-					 	+"		SiPrompt(\\'Enter solid, dash, dot, or dashdot:\\',function(i){"
-					 	+"		var map = window.currWin.mapper;"
-					 	+"		  if(i && (window.MapLineStyles.indexOf(i)>=0)) {"
-					 	+"			 map.addCustomLine(map.getPlayerRoom(),\\'"+closestRoomId+"\\','+dirNum+',i);"
-					 	+"			 map.updateMap();"
-					 	+"		  }})"
-					 	+"	'});"
-					 	+"}"
-					 	+"subMenu.push({n:'special',e:'',a:'javascript:"
-					 	+"	SiPrompt(\\'Enter special direction name\\',function(sd){"
-					 	+"		if(!sd) return;"
-					 	+"		SiPrompt(\\'Enter solid, dash, dot, dashdot:\\',function(i){"
-					 	+" 			var map = window.currWin.mapper;"
-					 	+"			if(i && (window.MapLineStyles.indexOf(i)>=0)) {"
-					 	+"		 		map.addCustomLine(map.getPlayerRoom(),\\'"+closestRoomId+"\\',sd,i);"
-					 	+"				map.updateMap();"
-					 	+"		  }"
-					 	+"	  	})});"
-					 	+"'});"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);"
-					 	+"",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	var subMenu = [];
+					 	var lines = self.getCustomLines(self.getPlayerRoom());
+					 	for(var dir in window.DirNameNums) {
+					 	  var dirNum = window.DirNameNums[dir];
+					 	  var dirCode = window.DirNumCodes[dirNum];
+					 	  if(!lines[dirCode])
+					 		subMenu.push({n:dir,e:'',a:(function(dirCode){return function(event) {
+					 			SiPrompt('Enter solid, dash, dot, or dashdot:',function(i){
+					 			  if(i && (window.MapLineStyles.indexOf(i)>=0)) {
+					 				 self.addCustomLine(self.getPlayerRoom(),closestRoomId,dirCode,i);
+					 				 self.updateMap();
+					 			  }})
+					 		}})(dir)});
+					 	}
+					 	subMenu.push({n:'special',e:'',a:function(event) {
+					 		SiPrompt('Enter special direction name',function(sd){
+					 			if(!sd) return;
+					 			SiPrompt('Enter solid, dash, dot, dashdot:',function(i){
+					 				if(i && (window.MapLineStyles.indexOf(i)>=0)) {
+					 			 		self.addCustomLine(self.getPlayerRoom(),closestRoomId,sd,i);
+					 					self.updateMap();
+					 			  }
+					 		  	})});
+					 	}});
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);
+					 	},
 					 "e":""},
 					{"n":"Delete Custom Line",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"var subMenu = [];"
-					 	+"var lines = map.getCustomLines('"+closestRoomId+"');"
-					 	+"for(var dir in lines) {"
-					 	+"  var dirNm = (dir in window.DirCodeNames)? window.DirCodeNames[dir]:dir;"
-					 	+"	subMenu.push({n:dirNm,e:'',a:'javascript:"
-					 	+"		 var map=window.currWin.mapper;"
-					 	+"		 map.removeCustomLine(\\'"+closestRoomId+"\\',\\''+dir+'\\');"
-					 	+"		 map.updateMap();"
-					 	+"  '});"
-					 	+"}"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);"
-					 	+"",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	var subMenu = [];
+					 	var lines = self.getCustomLines(closestRoomId);
+					 	for(var dir in lines) {
+					 	  var dirNm = (dir in window.DirCodeNames)? window.DirCodeNames[dir]:dir;
+					 		subMenu.push({n:dirNm,e:'',a:(function(dir){return function(event) {
+					 			 self.removeCustomLine(closestRoomId,dir);
+					 			 self.updateMap();
+					 	  }})(dir)});
+					 	}
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);
+					 	},
 					 "e":"Object.keys(window.currWin.mapper.getCustomLines('"+closestRoomId+"')).length > 0"},
 				];
 				menu = menu.concat(buildCustomMenu('room'));
@@ -1427,46 +1522,46 @@ function Mapper(sipwin)
 				var menu= [];
 				if (self.areas[areaId].labels[closestLabelId].type !== 'image') {
 					menu.push({"n":"Edit Text",
-					 "a": "javascript:var map=window.currWin.mapper;"
-					 	+"var label = map.getMapLabel('"+areaId+"','"+closestLabelId+"');"
-					 	+"  SiPrompt('Enter new text:',function(text){"
-						+"	  label.text = text;"
-					 	+"	  map.updateMap();"
-					 	+"  });"
-						+ ""
+					 "a":function(event) {
+					 	var label = self.getMapLabel(areaId,closestLabelId);
+					 	  SiPrompt('Enter new text:',function(text){
+							  label.text = text;
+					 		  self.updateMap();
+					 	  });
+						}
 					});
 					menu.push({"n":"Label Color",
-					 "a": "javascript:var map=window.currWin.mapper;"
-					 	+"var label = map.getMapLabel('"+areaId+"','"+closestLabelId+"');"
-					 	+"  SiColorPicker('Pick foreground color:',function(fg){"
-					 	+"	SiColorPicker('Pick foreground color:',function(bg) {"
-					 	+"	  label.fgColor= `rgb(${fg[0]}, ${fg[1]}, ${fg[2]})`;"
-						+"	  label.bgColor= `rgb(${bg[0]}, ${bg[1]}, ${bg[2]})`;"
-						+"	  label.foregroundTransparency = fg[3];"
-						+"	  label.backgroundTransparency = bg[3];"
-					 	+"	  map.updateMap();"
-					 	+"	},true);"
-					 	+"  },true);"
-						+ ""
+					 "a":function(event) {
+					 	var label = self.getMapLabel(areaId,closestLabelId);
+					 	  SiColorPicker('Pick foreground color:',function(fg){
+					 		SiColorPicker('Pick foreground color:',function(bg) {
+					 		  label.fgColor= `rgb(${fg[0]}, ${fg[1]}, ${fg[2]})`;
+							  label.bgColor= `rgb(${bg[0]}, ${bg[1]}, ${bg[2]})`;
+							  label.foregroundTransparency = fg[3];
+							  label.backgroundTransparency = bg[3];
+					 		  self.updateMap();
+					 		},true);
+					 	  },true);
+						}
 					});
 					menu.push({"n":"Label Font",
-					 "a": "javascript:var map=window.currWin.mapper;"
-					 	+"var label = map.getMapLabel('"+areaId+"','"+closestLabelId+"');"
-					 	+"  SiFontPicker('Pick foreground color:',function(name,sz){"
-						+"	  label.fontSize=sz;"
-						+"	  label.fontName=name;"
-					 	+"	  map.updateMap();"
-					 	+"  });"
-						+ ""
+					 "a":function(event) {
+					 	var label = self.getMapLabel(areaId,closestLabelId);
+					 	  SiFontPicker('Pick foreground color:',function(name,sz){
+							  label.fontSize=sz;
+							  label.fontName=name;
+					 		  self.updateMap();
+					 	  });
+						}
 					});
 				}
 				menu.push({"n":"Delete Label",
-				 "a":"javascript:var map=window.currWin.mapper;"
-				 	+"SiConfirm('Delete label?',function(){" 
-				 	+" map.deleteMapLabel('"+areaId+"', '"+closestLabelId+"');"
-				 	+" map.updateMap();"
-				 	+" });"
-				});
+				 "a":function(event) {
+				 	SiConfirm('Delete label?',function(){
+					 	 self.deleteMapLabel(areaId,closestLabelId);
+					 	 self.updateMap();
+				 	 });
+				}});
 				menu = menu.concat(buildCustomMenu('room'));
 				DropDownMenu(e, e.clientX, e.clientY, 200, 12, menu);
 			}
@@ -1474,112 +1569,115 @@ function Mapper(sipwin)
 			{
 				var menus =[
 					{"n":"Change Area",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"map.clearMapSelection();"
-					 	+"event.stopPropagation();"
-					 	+"var select = document.createElement('select');"
-					 	+"for(var areaId in map.areas) {"
-					 	+"  var area = map.areas[areaId];"
-					 	+"  if(map.getAreaCenterRoom(areaId)!=null)"
-						+"    select.add(new Option(area.name,areaId));"
-					 	+"}"
-					 	+"var node = this.parentNode;"
-					 	+"select.style.fontFamily = this.style.fontFamily;"
-					 	+"select.style.fontSize = this.style.fontSize;"
-					 	+"select.style.maxHeight=node.parentNode.style.height;"
-					 	+"select.style.maxWidth=node.parentNode.style.width;"
-					 	+"select.style.overflowY='auto';"
-					 	+"select.onclick=function(e){e.stopPropagation();};"
-					 	+"select.onchange=function(e){"
-						+"	 map.centerview(map.getAreaCenterRoom(select.value));"
-						+"   map.updateMap();"
-						+"	 e.stopPropagation();"
-						+"};"
-					 	+"node.innerHTML='';"
-					 	+"node.appendChild(select);"
-					 	+"",
+					 "a":function(event) {
+					 	self.clearMapSelection();
+					 	event.stopPropagation();
+					 	var select = document.createElement('select');
+					 	for(var areaId in self.areas) {
+					 	  var area = self.areas[areaId];
+					 	  if(self.getAreaCenterRoom(areaId)!=null)
+							select.add(new Option(area.name,areaId));
+					 	}
+					 	var node = this;
+					 	select.style.fontFamily = this.style.fontFamily;
+					 	select.style.fontSize = this.style.fontSize;
+					 	select.style.maxHeight=node.parentNode.style.height;
+					 	select.style.maxWidth=node.parentNode.style.width;
+					 	select.style.overflowY='auto';
+					 	select.onclick=function(e){
+							e.stopPropagation();
+						};
+					 	select.onchange=function(e){
+							self.centerview(self.getAreaCenterRoom(select.value));
+							self.updateMap();
+							e.stopPropagation();
+						};
+					 	node.innerHTML='';
+					 	node.appendChild(select);
+					 	},
 					 "e":"true"},
 					{"n":"Add Room",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"if ('"+areaId+"') {" 
-					 	+" var id = map.addRoom(map.createRoomId(), '"+areaId+"');"
-					 	+" if(id !== false) {"
-					 	+"	map.setRoomCoordinates(id,"+gridX+","+gridY+","+zLevel+");"
-					 	+"	map.updateMap();"
-					 	+" }"
-					 	+"}",
+					 "a":function(event) {
+					 	if (areaId) {
+					 	 var id = self.addRoom(self.createRoomId(), areaId);
+					 	 if(id !== false) {
+					 	  self.centerview(id);
+					 		self.setRoomCoordinates(id,gridX,gridY,zLevel);
+					 		self.updateMap();
+					 	 }
+					 	}},
 					 "e":"("+isValidAddRoom+") && ('"+areaId+"')"},
 					{"n":"Center View",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"  map.mapWidget.layout.offsetX = (map.mapWidget.canvas.width / 2) - (" + gridX + " * map.mapWidget.layout.tileSize * " + SpacingRatio + ");" 
-					 	+"  map.mapWidget.layout.offsetY = (map.mapWidget.canvas.height / 2) - (" + gridY + " * map.mapWidget.layout.tileSize * " + SpacingRatio + ");"
-					 	+"  map.updateMap();"
-					 	+"",
+					 "a":function(event) {
+					 	  self.mapWidget.layout.offsetX = 
+					 	  	(self.mapWidget.canvas.width / 2) 
+					 	  	- (gridX * self.mapWidget.layout.tileSize * SpacingRatio);
+					 	  self.mapWidget.layout.offsetY = 
+					 	  	(self.mapWidget.canvas.height / 2) 
+					 	  	- (gridY * self.mapWidget.layout.tileSize * SpacingRatio);
+					 	  self.updateMap();
+					 	},
 					 "e":"true"},
 					{"n":"Move Room To",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"  map.setRoomCoordinates(map.centerView,"+gridX+","+gridY+","+zLevel+");"
-					 	+"  map.updateMap();"
-					 	+"",
+					 "a":function(event) {
+					 	  self.setRoomCoordinates(self.centerView,gridX,gridY,zLevel);
+					 	  self.updateMap();
+					 	},
 					 "e":"window.currWin.mapper.centerView"},
 					{"n":"Add Label",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"SiPrompt('Enter label text:',function(i){"
-					 	+"	map.createMapLabel('"+areaId+"',i,"+gridX+","+gridY+","+zLevel+",255,255,255,0,0,0);"
-					 	+"	map.updateMap();"
-					 	+"});",
+					 "a":function(event) {
+					 	SiPrompt('Enter label text:',function(i){
+					 		self.createMapLabel(areaId,i,gridX,gridY,zLevel,255,255,255,0,0,0);
+					 		self.updateMap();
+					 	});},
 					 "e":"('"+areaId+"')"},
 					{"n":"Add Image Label",
-					 "a":"javascript:var map=window.currWin.mapper;"
-						+"SiPrompt('Enter image file path (URL or local):',function(filePath){"
-						+"	if(filePath) {"
-						+"		SiPrompt('Enter width (pixels):',function(w){"
-						+"			w=Math.max(parseFloat(w),5);"
-						+"			SiPrompt('Enter height (pixels):',function(h){"
-						+"				h=Math.max(parseFloat(h),5);"
-						+"				map.createMapImageLabel('"+areaId+"',filePath,"+gridX+","+gridY+","+zLevel+",w,h);"
-						+"				map.updateMap();"
-						+"			});"
-						+"		});"
-						+"	}"
-						+"});",
+					 "a":function(event) {
+						SiPrompt('Enter image file path (URL or local):',function(filePath){
+							if(filePath) {
+								SiPrompt('Enter width (pixels):',function(w){
+									w=Math.max(parseFloat(w),5);
+									SiPrompt('Enter height (pixels):',function(h){
+										h=Math.max(parseFloat(h),5);
+										self.createMapImageLabel(areaId,filePath,gridX,gridY,zLevel,w,h);
+										self.updateMap();
+									});
+								});
+							}
+						});},
 					 "e":"('"+areaId+"')"},
 					{"n":"Add Custom Line",
-					 "a":"javascript:var map=window.currWin.mapper;"
-					 	+"var subMenu = [];"
-					 	+"var coords = ["+gridX+","+gridY+","+zLevel+"];"
-					 	+"var coordStr = JSON.stringify(coords);"
-					 	+"var lines = map.getCustomLines(map.getPlayerRoom());"
-					 	+"for(var dir in window.DirNameNums) {"
-					 	+"  var dirNum = window.DirNameNums[dir];"
-					 	+"  var dirCode = window.DirNumCodes[dirNum];"
-					 	+"  if(!lines[dirCode])"
-					 	+"	subMenu.push({n:dir,e:'',a:'javascript:"
-					 	+"		SiPrompt(\\'Enter solid, dash, dot, or dashdot:\\',function(i){"
-					 	+"		var map = window.currWin.mapper;"
-					 	+"		  if(i && (window.MapLineStyles.indexOf(i)>=0)) {"
-					 	+"			 map.addCustomLine(map.getPlayerRoom(),'+coordStr+','+dirNum+',i);"
-					 	+"			 map.updateMap();"
-					 	+"		  }})"
-					 	+"	'});"
-					 	+"}"
-					 	+"subMenu.push({n:'special',e:'',a:'javascript:"
-					 	+"	SiPrompt(\\'Enter special direction name\\',function(sd){"
-					 	+"		if(!sd) return;"
-					 	+"		SiPrompt(\\'Enter solid, dash, dot, or dashdot:\\',function(i){"
-					 	+" 			var map = window.currWin.mapper;"
-					 	+"			if(i && (window.MapLineStyles.indexOf(i)>=0)) {"
-					 	+"		 		map.addCustomLine(map.getPlayerRoom(),'+coordStr+',sd,i);"
-					 	+"				map.updateMap();"
-					 	+"		  }"
-					 	+"	  	})});"
-					 	+"'});"
-					 	+"var c = getComputedStyle(this.parentNode.parentNode);"
-					 	+"var cn = getComputedStyle(this.parentNode);"
-					 	+"var x = parseFloat(c.left) + parseFloat(c.width);"
-					 	+"var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;"
-					 	+"DropDownMenu(null,x,y,'auto',12,subMenu,true);"
-					 	+"",
+					 "a":function(event) {
+					 	var subMenu = [];
+					 	var coords = [gridX,gridY,zLevel];
+					 	var lines = self.getCustomLines(self.getPlayerRoom());
+					 	for(var dir in window.DirNameNums) {
+					 	  var dirNum = window.DirNameNums[dir];
+					 	  var dirCode = window.DirNumCodes[dirNum];
+					 	  if(!lines[dirCode])
+					 		subMenu.push({n:dir,e:'',a:(function(dirNum){return function(event) {
+					 			SiPrompt('Enter solid, dash, dot, or dashdot:',function(i){
+					 			  if(i && (window.MapLineStyles.indexOf(i)>=0)) {
+					 				 self.addCustomLine(self.getPlayerRoom(),coords,dirNum,i);
+					 				 self.updateMap();
+					 			  }})
+					 		}})(dirNum)});
+					 	}
+					 	subMenu.push({n:'special',e:'',function(event) {
+					 		SiPrompt('Enter special direction name',function(sd){
+					 			if(!sd) return;
+					 			SiPrompt('Enter solid, dash, dot, or dashdot:',function(i){
+					 				if(i && (window.MapLineStyles.indexOf(i)>=0)) {
+					 			 		self.addCustomLine(self.getPlayerRoom(),coords,sd,i);
+					 					self.updateMap();
+					 			  }
+					 		  	})});
+					 	}});
+					 	var c = getComputedStyle(this.parentNode.parentNode);
+					 	var x = parseFloat(c.left) + parseFloat(c.width);
+					 	var y = event.currentTarget.getBoundingClientRect().top + window.scrollY;
+					 	DropDownMenu(null,x,y,'auto',12,subMenu,true);
+					 	},
 					 "e":""}
 				];
 				menus = menus.concat(buildCustomMenu('room'));
@@ -1606,6 +1704,7 @@ function Mapper(sipwin)
 			width: targetWidth,
 			height: targetHeight,
 			frame: typeof x === 'string' ? x : null,
+			titleBar: titleBar,
 			zoomHandler: zoomHandler,
 			clickHandler: clickHandler,
 			mouseDownHandler: mouseDownHandler,
@@ -1613,7 +1712,7 @@ function Mapper(sipwin)
 			mouseUpHandler: mouseUpHandler
 		};
 		this.zoom = 1.0;
-		this.centerView = this.centerView || Object.keys(this.rooms)[0] || null;
+		this.centerview(this.centerView || Object.keys(this.rooms)[0] || null);
 		this.updateMap();
 		this.saveLayout = function(frameName, x, y, width, height) {
 			this.userData = this.userData || {};
@@ -1665,7 +1764,7 @@ function Mapper(sipwin)
 		{
 			delete this.rooms[k];
 			if(k == this.centerView)
-				this.centerView = (Object.keys(this.rooms).length)?Object.keys(this.rooms)[0]:null;
+				centerview((Object.keys(this.rooms).length)?Object.keys(this.rooms)[0]:null);
 		}
 		delete this.areas[areaId];
 		return true;
@@ -1691,7 +1790,7 @@ function Mapper(sipwin)
 			{
 				delete this.rooms[roomId];
 				if(roomId == this.centerView)
-					this.centerView = (Object.keys(this.rooms).length)?Object.keys(this.rooms)[0]:null;
+					centerview((Object.keys(this.rooms).length)?Object.keys(this.rooms)[0]:null);
 				for(var k in this.rooms)
 				{
 					var room = this.rooms[k];
@@ -2777,6 +2876,7 @@ function Mapper(sipwin)
 		fromRoom.exits.push(fexit);
 		return true;
 	};
+	
 	this.setExitStub = function(roomId, direction, set) {
 		direction = GetDirCode(direction);
 		if(!direction)
@@ -2814,6 +2914,7 @@ function Mapper(sipwin)
 		}
 		return false;
 	};
+	
 	this.setExitWeight = function(roomId, exitCommand, weight) {
 		if(!(roomId in this.rooms))
 			return false;
@@ -2836,6 +2937,7 @@ function Mapper(sipwin)
 		exit.weight = weight;
 		return true;
 	};
+	
 	this.setGridMode = function(areaId, tf) {
 		if(!(areaId in this.areas))
 			return false;
@@ -2843,11 +2945,13 @@ function Mapper(sipwin)
 		area.gridMode = tf;
 		return true;
 	};
+	
 	this.setMapUserData = function(key, value) {
 		if(!this.userData)
 			this.userData = {};
 		this.userData[key] = value;
 	};
+	
 	this.setMapZoom = function(zoom, areaId) {
 		zoom = Math.max(0.5, Math.min(2.0, zoom));
 		if(areaId && (areaId in this.areas))
@@ -2861,6 +2965,7 @@ function Mapper(sipwin)
 		this.updateMap();
 		return true;
 	};
+	
 	this.setRoomArea = function(roomId, areaId) {
 		var roomIds=Array.isArray(roomId)?roomId:[roomId];
 		for(var k=0;k<roomIds.length;k++)
@@ -2885,7 +2990,8 @@ function Mapper(sipwin)
 				} 
 			}
 		}
-	}
+	};
+	
 	this.setRoomChar = function(roomId, char) {
 		var roomIds = Array.isArray(roomId) ? roomId : [roomId];
 		var success = false;
@@ -3093,6 +3199,14 @@ function Mapper(sipwin)
 		}
 		return success;
 	};
+	
+	this.isMapperCreated = function() {
+		if (!this.mapWidget || !this.mapWidget.ctx) {
+			return false;
+		}
+		return true;
+	}
+	
 	this.updateMap = function() {
 		if (!this.mapWidget || !this.mapWidget.ctx) {
 			console.warn("Map widget not found. Call createMapper first.");
