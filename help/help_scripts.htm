@@ -19,7 +19,7 @@ a global script name, then the phonebook one will be preferred.</LI>
 <LI>Script: The Javascript to execute.  Entities/Variables may be included in strings
 in scripts in the form '&amp;varname;'.</LI>
 </UL>
-<h3>Useful Variables <FONT COLOR=YELLOW>(Not available to plugins)</FONT></h3>
+<h3>Useful Variables <FONT COLOR=YELLOW>(Not available to plugins directly)</FONT></h3>
 
 <table border=1 style="color:white;font-size:12;">
 <thead>
@@ -51,10 +51,9 @@ in scripts in the form '&amp;varname;'.</LI>
 <h3>Useful Functions</h3>
 <table border=1 style="color:white;font-size:12;">
 <thead>
-<tr><td>Variable</td><td>Description</td></tr>
+<tr><td>Function</td><td>Description</td></tr>
 </thead>
 <tbody style="font-size:12px;color:white;">
-<tr><td style="font-family:monospace;">win.mxp.getFrameMap()</td><td>Map string-&gt;div of frames</td></tr>
 <tr><td style="font-family:monospace;">win.process(str)</td><td>Process MXP/Entities without display</td></tr>
 <tr><td style="font-family:monospace;">win.submitInput(str)</td><td>Submit command to the mud</td></tr>
 <tr><td style="font-family:monospace;">win.displayText(str)</td><td>Display Text in active window</td></tr>
@@ -70,6 +69,15 @@ in scripts in the form '&amp;varname;'.</LI>
 <tr><td style="font-family:monospace;">win.sendGMCP(str,str)</td><td>Send <a href="javascript:menuHelp('Gmcp')">GMCP</a> command str + json doc str(2)</td></tr>
 <tr><td style="font-family:monospace;">win.sendMSDP(str,str)</td><td>Send msdp json doc str</td></tr>
 <tr><td style="font-family:monospace;">win.submitHidden(str)</td><td>Submit hidden text to the mud</td></tr>
+<tr><td style="font-family:monospace;">win.addTempTimer(obj)</td><td>Submit temp timer object (see <a href="javascript:menuHelp('Plugin')">#timer</a>)</td></tr>
+<tr><td style="font-family:monospace;">win.removeTempTimer(str)</td><td>Remove temp timer by name</td></tr>
+<tr><td style="font-family:monospace;">win.addTempTrigger(obj)</td><td>Submit temp trigger object (see <a href="javascript:menuHelp('Plugin')">#trigger</a>)</td></tr>
+<tr><td style="font-family:monospace;">win.removeTempTrigger(str)</td><td>Remove temp trigger by name</td></tr>
+<tr><td style="font-family:monospace;">win.addTempAlias(obj)</td><td>Submit temp alias object (see <a href="javascript:menuHelp('Plugin')">#alias</a>)</td></tr>
+<tr><td style="font-family:monospace;">win.removeTempAlias(str)</td><td>Remove temp alias by name</td></tr>
+<tr><td style="font-family:monospace;">win.addTempMenu(str,obj)</td><td>Submit menu entries under str (see <a href="javascript:menuHelp('Plugin')">#menus</a>)</td></tr>
+<tr><td style="font-family:monospace;">win.removeTempAlias(str)</td><td>Remove temp menu entries under str</td></tr>
+<tr><td style="font-family:monospace;">win.dispatchEvent(str)</td><td>Post an event string or json obj (w/'type')</td></tr>
 <tr><td style="font-family:monospace;">win.mapper.*</td><td>The visual <a href="javascript:menuHelp('Mapper')">Mapper</a> interface.</td></tr>
 </tbody>
 </table>

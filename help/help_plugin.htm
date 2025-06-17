@@ -12,6 +12,7 @@ broken down below.  A minimalist plugin document looks like this:
   "triggers": [],
   "aliases": [],
   "timers": []
+  "menus": {}
 }
 </PRE>
 The <B>name</B> may be any string, but try to keep it unique.  <B>Version</B>
@@ -26,10 +27,9 @@ this:
 {
 	"name":"my trigger",
 	"regex":false,
-	"pattern":"string",
+	"pattern":"mud output",
 	"once":true,
-	"action":"displayText",
-	"argument":"'hi'"
+	"action":"win.displayText('hi');"
 }
 </PRE>
 The <B>name</B> of a plugin trigger is not terribly important, but is required.  <B>Regex</B>
@@ -41,7 +41,7 @@ its initial match, or false to continue matching.
 enableTrigger, disableTrigger, startTimer, clearTimer, displayAt, submitHidden, or sendPlugin.  These,
 and the required <B>argument(s)</B> are summarized in the help for  
 <a href="javascript:menuHelp('Actions')">Actions</a>.  Remember that an argument string must
-be internally single quoted, unless it is not a string, but one of the permitted variable names.
+be internally quoted, unless it is not a string, but one of the permitted variables.
 <P>
 The top level <B>aliases</B> field is an array of alias objects, each of which looks like 
 this:
@@ -49,10 +49,9 @@ this:
 {
 	"name":"my alias",
 	"regex":false,
-	"pattern":"string",
+	"pattern":"/command",
 	"replace":"replacement string",
-	"action":"displayText",
-	"argument":"'hi'"
+	"action":"win.displayText('hi');"
 }
 </PRE>
 The <B>name</B>, <b>regex</b>, <B>pattern</B>, <B>action</B>, and <B>argument</B> 
@@ -68,8 +67,7 @@ this:
 	"delay":0,
 	"option":"once"
 	"trigger":true,
-	"action":"displayText"
-	"argument":"'hi'"
+	"action":"win.displayText('hi');"
 }
 </PRE>
 The <B>name</B>, <B>action</B>, and <B>argument</B> 
@@ -81,10 +79,29 @@ it must be externally triggered before counting down.  <B>Delay</B> is the numbe
 of milliseconds (1000th of a second) that the timer delays for; for example, 5000
 would be 5 seconds, and 60000 would be a minute.
 <P>
+<P>
+The top level <B>menus</B> field is additions to the top level menu system.  Each key
+is a top level menu (such as Windows, Global Options, or Help).  Each menus key then
+is mapped to an array of specific menu entry json object like this:
+<PRE>
+"Top Menu": [{
+	"n":"Option 1",
+	"a":"win.displayText('hi');"
+},{
+	"n":"Option 2",
+	"a":"win.displayText('ho');"
+}]
+</PRE>
+The <B>n</B> entry is simply the drop-down option name, while <B>a</B> is an 
+Action, which is the same as described above under Triggers.  Optional arguments
+include <B>v</B>, which is a truthy variable expression that describes whether
+the option is visible, and <B>e</B>, which is a truthy variable expression 
+describing whether the option may be clicked, or is grayed out.
+<P>
 <h3>Javascript Code</h3>
-Unlike normal <a href="javascript:menuHelp('Scripts')">Scripts</a>, a plugin code
-script is
-sandboxed to protect the user installing it, which means that the code will not
+Plugin code has the same <a href="javascript:menuHelp('Scripts')">Scripts</a> api
+available to it, but unlike normal scripts, plugin code is sandboxed to protect 
+the user installing it, which means that the code will not
 have direct access to the ENTIRE mud client api or dom.  Instead, it has limited
 access to the win.* and win.mapper.* methods as scripts in the Scripts help.
 For other outside events, it must receive information 
@@ -117,4 +134,10 @@ and always a 'data' field, in addition to other 'extra' fields.
 <TR><TD>variable</TD><TD>key</TD><TD>Result from fetchVariable with key,data</TD></TR>
 <TR><TD>?</TD><TD>?</TD><TD>Typed event from trigger/alias/etc</TD></TR>
 </table> 
+<P>
+If a plugin needs its own configuration, then you can take advantage of the fact
+that win.displayText(...) supports MXP tags, such as INPUT, regardless of whether
+MXP is actually turned on in the client.  If you need storage, localStorage.getItem, 
+setItem, and removeItem are also available.  
+available.  
 </UL>

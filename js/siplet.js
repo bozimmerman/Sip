@@ -7,7 +7,8 @@ var Siplet =
 {
 	VERSION_MAJOR: '3.1',
 	VERSION_MINOR: '1',
-	NAME: window.isElectron?'Sip':'Siplet'
+	NAME: window.isElectron?'Sip':'Siplet',
+	R: /^win\.[\w]+(\.[\w]+)*$/
 };
 
 function SipletWindow(windowName)
@@ -21,9 +22,9 @@ function SipletWindow(windowName)
 	this.pixelWidth = 800;
 	this.pixelHeight = 600;
 	this.maxLines = getConfig('window/lines',5000);
-	this.MSPsupport = false;
 	this.MSDPsupport = false;
 	this.GMCPsupport = false;
+	this.MSPsupport = false;
 	this.MXPsupport = false;
 	this.MCCPsupport = false;
 	this.wsopened = false;
@@ -37,17 +38,22 @@ function SipletWindow(windowName)
 	this.mapper = new Mapper(this);
 	this.text = new TEXT([this.mxp,this.msp]);
 	this.topWindow = document.getElementById(windowName);
+	if(this.topWindow) this.topWindow.sipwin = this;
 	this.wsocket = null;
 	this.gauges=[];
 	this.gaugeWindow = null;
 	this.textBuffer = '';
 	this.textBufferPruneIndex = 0;
+	this.tempMenus  = null;
 	this.globalTriggers = GetGlobalTriggers();
 	this.triggers = null;
+	this.tempTriggers  = null;
 	this.globalAliases = GetGlobalAliases();
 	this.aliases = null;
-	this.globalTimers = JSON.parse(JSON.stringify(GetGlobalTimers()));
+	this.tempAliases = null;
+	this.globalTimers = GetGlobalTimers();
 	this.timers = null;
+	this.tempTimers = null;
 	this.activeTimers = [];
 	this.lastStyle = '';
 	this.listeners = {};
@@ -147,7 +153,12 @@ function SipletWindow(windowName)
 
 	if(this.topWindow)
 	{
-		this.topWindow.onclick = function() { ContextDelayHide(); setInputBoxFocus(); };
+		this.topWindow.onclick = function(e) {
+			ContextDelayHide(); 
+			if(e.target.tagName == 'INPUT')
+				return;
+			setInputBoxFocus(); 
+		};
 		var fontFace = getConfig('window/fontface', 'monospace');
 		var fontSize = getConfig('window/fontsize', '16px');
 	    this.topWindow.style.fontFamily = fontFace;
@@ -178,7 +189,7 @@ function SipletWindow(windowName)
 		this.wsocket.onmessage = this.onReceive;
 		this.wsocket.onopen = function(event)  
 		{
-			me.plugins.postEvent({type: 'connect',data:url});
+			me.dispatchEvent({type: 'connect',data:url});
 			me.wsopened=true; 
 			me.tab.style.backgroundColor="green";
 			me.tab.style.color="white";
@@ -193,7 +204,7 @@ function SipletWindow(windowName)
 			me.flushWindow();
 			if(me.tab && me.tab.innerHTML.startsWith("Connecting"))
 				me.tab.innerHTML = 'Failed connection to ' + url;
-			me.plugins.postEvent({type: 'closesock',data:url});
+			me.dispatchEvent({type: 'closesock',data:url});
 			me.wsopened=false; 
 			me.tab.style.backgroundColor="#FF555B";
 			me.tab.style.color="white";
@@ -209,7 +220,7 @@ function SipletWindow(windowName)
 	
 	this.close = function()
 	{
-		this.plugins.postEvent({type: 'close'});
+		this.dispatchEvent({type: 'close'});
 		this.closeSocket();
 		this.reset();
 	};
@@ -217,22 +228,34 @@ function SipletWindow(windowName)
 	this.process = function(s)
 	{
 		if(!s) return s;
-		var oldResume = this.text.resume;
-		var oldFlush = this.flushWindow;
-		this.flushWindow = function(){};
-		this.text.resume = null;
-		s=this.text.process(s)
-		var startTime = Date.now();
-		while(this.text.resume && ((Date.now() - startTime)<500))
-			s+=this.text.process('')
-		s += this.text.flush();
-		if((!this.mxp.active())&&(this.fixVariables))
-			s = this.fixVariables(s);
+		try
+		{
+			var oldResume = this.text.resume;
+			var oldFlush = this.flushWindow;
+			var oldMXP = this.MXPsupport;
+			var oldMSP = this.MSPsupport;
+			this.flushWindow = function(){};
+			this.text.resume = null;
+			this.MXPsupport = true;
+			this.MSPsupport = true;
+			s=this.text.process(s)
+			var startTime = Date.now();
+			while(this.text.resume && ((Date.now() - startTime)<500))
+				s+=this.text.process('')
+			s += this.text.flush();
+			if((!this.mxp.active())&&(this.fixVariables))
+				s = this.fixVariables(s);
+		}
+		catch(e) { 
+			console.warn(e);
+		}
 		this.flushWindow = oldFlush;
 		this.text.resume = oldResume;
+		this.MSPsupport = oldMSP;
+		this.MXPsupport = oldMXP;
 		return s;
 	};
-
+	
 	this.mxpFix = function()
 	{
 		this.mxp.defBitmap = 256; // no override
@@ -283,8 +306,15 @@ function SipletWindow(windowName)
 		this.textBufferPruneIndex = 0;
 		this.globalTriggers = GetGlobalTriggers();
 		this.triggers = null;
+		this.tempTriggers = null;
 		this.globalAliases = GetGlobalAliases();
 		this.aliases = null;
+		this.tempAliases = null;
+		this.clearTimers();
+		this.globalTimers = GetGlobalTimers();
+		this.timers = null;
+		this.tempTimers = null;
+		this.tempMenus = null;
 		this.listeners = {};
 		this.resetTimers();
 		this.mxpFix();
@@ -428,15 +458,40 @@ function SipletWindow(windowName)
 		me.flushWindow();
 		me.triggerCheck();
 	};
+	
+	this.executeAction = function(action)
+	{
+		action = this.fixVariables(action);
+		var p = action.indexOf("(");
+		try 
+		{
+			var act = SipletActions[action.substr(0,p)];
+			var z = action.lastIndexOf(')');
+			if(IsQuotedStringArgument(action.substring(p+1,z),act.args,Siplet.R))
+			{
+				var win = this;
+		 		eval(action);
+	 		}
+		}
+		catch(e)
+		{
+			 console.error(e);
+		};
+	};
 
+	this.menus = function() {
+		return this.plugins.menus(this.tempMenus)
+	};
+	
 	this.evalTriggerGroup = function(triggers)
 	{
 		var win = this;
 		for(var i=0;i<triggers.length;i++)
 		{
 			var trig = triggers[i];
-			if(eval(trig.allowed) && trig.pattern
-			&& (!trig.disabled))
+			if(trig.pattern
+			&& (!trig.disabled)
+			&& (SafeEval(trig.allowed,{win:this})))
 			{
 				var prev = trig.prev - this.textBufferPruneIndex;
 				if(prev < 0)
@@ -450,8 +505,7 @@ function SipletWindow(windowName)
 						for(var i=0;i<match.length;i++)
 							this.setVariable('match'+i,match[i]);
 						trig.prev = this.textBufferPruneIndex + match.index + 1;
-						var action = this.fixVariables(trig.action.replaceAll('\\n','\n'));
-						try { eval(action); } catch(e) {console.error(e);};
+						this.executeAction(trig.action);
 						for(var i=0;i<match.length;i++)
 							this.setVariable('match'+i,null);
 						match = trig.pattern.exec(this.textBuffer);
@@ -466,8 +520,7 @@ function SipletWindow(windowName)
 					{
 						prev += x + trig.pattern.length + 1;
 						trig.prev = this.textBufferPruneIndex + x + trig.pattern.length + 1;
-						var action = this.fixVariables(trig.action.replaceAll('\\n','\n'));
-						try { eval(action); } catch(e) {console.error(e);};
+						this.executeAction(trig.action);
 						if(trig.once)
 							trig.disabled=true;
 						x = this.textBuffer.indexOf(trig.pattern,prev);
@@ -499,7 +552,62 @@ function SipletWindow(windowName)
 		this.evalTriggerGroup(this.localTriggers());
 		if(this.plugins.triggers())
 			this.evalTriggerGroup(this.plugins.triggers());
+		if(this.tempTriggers)
+			this.evalTriggerGroup(this.tempTriggers);
 	};
+	
+	this.addTempTrigger = function(trigger)
+	{
+		trigger = this.validatedTrigger('Temp', trigger);
+		if(trigger)
+		{
+			if(this.tempTriggers==null)
+				this.tempTriggers = [];
+			this.tempTriggers.push(trigger);
+			return true;
+		}
+		return false;
+	}
+
+	this.removeTempTrigger = function(name)
+	{
+		if(this.tempTriggers==null)
+			return false;
+		for(var i=0;i<this.tempTriggers.length;i++)
+			if(this.tempTriggres[i].name == name)
+			{
+				this.tempTriggers.splice(i,1);
+				if(this.tempTriggers.length == 0)
+					this.tempTriggers = null;
+				return true;
+			}
+		return false;
+	}
+
+	this.addTempMenu = function(top, menu)
+	{
+		menu = this.validatedMenu('Temp '+top, menu);
+		if(menu && top)
+		{
+			if(this.tempMenus==null)
+				this.tempMenus = {};
+			this.tempMenus[top] = menu;
+			return true;
+		}
+		return false;
+	}
+
+	this.removeTempMenu = function(name)
+	{
+		if(this.tempMenus==null)
+			return false;
+		if(name in this.tempMenus)
+		{
+			delete this.tempMenus[name];
+			return true;
+		}
+		return false;
+	}
 
 	this.addEventListener = function(type, func)
 	{
@@ -528,6 +636,13 @@ function SipletWindow(windowName)
 
 	this.dispatchEvent = function(event)
 	{
+		if(!event)
+			return;
+		if((typeof event === 'string')||(typeof event === 'number'))
+			event = {'type': (''+event)};
+		else
+		if(!('type' in event))
+			event.type = 'event';
 		if(event && event.type 
 		&& (event.type in this.listeners))
 		{
@@ -568,8 +683,7 @@ function SipletWindow(windowName)
 						for(var i=0;i<match.length;i++)
 							this.setVariable('match'+i,match[i]);
 						txt = txt.replace(alias.pattern,this.fixVariables(alias.replace));
-						var action = this.fixVariables(alias.action.replaceAll('\\n','\n'));
-						try { eval(action); } catch(e) {console.error(e);};
+						this.executeAction(alias.action);
 						for(var i=0;i<match.length;i++)
 							this.setVariable('match'+i,null);
 						return txt
@@ -578,8 +692,7 @@ function SipletWindow(windowName)
 				else
 				if(txt.startsWith(alias.pattern))
 				{
-					var action = this.fixVariables(alias.action.replaceAll('\\n','\n'));
-					try { eval(action); } catch(e) {console.error(e);};
+					this.executeAction(alias.action);
 					return alias.replace + txt.substr(alias.pattern.length);
 				}
 			}
@@ -595,6 +708,8 @@ function SipletWindow(windowName)
 			x = this.evalAliasGroup(this.localAliases(), x);
 		if(this.plugins.aliases())
 			x = this.evalAliasGroup(this.plugins.aliases(), x);
+		if(this.tempAliases)
+			x = this.evalAliasGroup(this.tempAliases, x);
 		return x;
 	};
 
@@ -614,6 +729,34 @@ function SipletWindow(windowName)
 		return this.aliases;
 	};
 	
+	this.addTempAlias = function(alias)
+	{
+		alias = this.validatedAlias ('Temp', alias);
+		if(alias)
+		{
+			if(this.tempAliases==null)
+				this.tempAliases = [];
+			this.tempAliases.push(alias);
+			return true;
+		}
+		return false;
+	};
+
+	this.removeTempAlias = function(name)
+	{
+		if(this.tempAliases==null)
+			return false;
+		for(var i=0;i<this.tempAliases.length;i++)
+			if(this.tempAliases[i].name == name)
+			{
+				this.tempAliases.splice(i,1);
+				if(this.tempAliases.length == 0)
+					this.tempAliases = null;
+				return true;
+			}
+		return false;
+	};
+
 	this.localScripts = function()
 	{
 		if(this.scripts == null)
@@ -664,7 +807,43 @@ function SipletWindow(windowName)
 				||(ci && (this.plugins.timers()[i].name.toLowerCase() == name.toLowerCase())))
 					return this.plugins.timers()[i];
 		}
+		if(this.localTimers)
+		{
+			for(i=0;i<this.localTimers.length;i++)
+				if((this.localTimers[i].name == name)
+				||(ci && (this.localTimers[i].name.toLowerCase() == name.toLowerCase())))
+					return this.localTimers[i];
+		}
 		return null;
+	};
+
+	
+	this.addTempTimer = function(timer)
+	{
+		timer = this.validatedTimer('Temp', timer);
+		if(timer)
+		{
+			if(this.tempTimers==null)
+				this.tempTimers = [];
+			this.tempTimers.push(timer);
+			return true;
+		}
+		return false;
+	};
+
+	this.removeTempTimer = function(name)
+	{
+		if(this.tempTimers==null)
+			return false;
+		for(var i=0;i<this.tempTimers.length;i++)
+			if(this.tempTimers[i].name == name)
+			{
+				this.tempTimers.splice(i,1);
+				if(this.tempTimers.length == 0)
+					this.tempTimers = null;
+				return true;
+			}
+		return false;
 	};
 
 	this.startTimer = function(timer)
@@ -693,9 +872,7 @@ function SipletWindow(windowName)
 		var timerCopy = JSON.parse(JSON.stringify(timer));
 		var me = this;
 		var execute = function() {
-			var action = me.fixVariables(timer.action.replaceAll('\\n','\n'));
-			var win = me;
-			try { eval(action); } catch(e) {console.error(e);};
+			this.executeAction(timer.action);
 			if(timer.option == 'repeat')
 			{
 				timer.timerId = setTimeout(execute, timer.delay);
@@ -727,6 +904,8 @@ function SipletWindow(windowName)
 			this.startTimers(this.localTimers());
 			if(this.plugins.timers())
 				this.startTimers(this.plugins.timers());
+			if(this.tempTimers)
+				this.startTimers(this.tempTimers);
 		}
 		else
 		{
@@ -1172,28 +1351,28 @@ function SipletWindow(windowName)
 		me.sendRaw(response);
 	};
 	
+	this.setTriggersStates = function(triggers, value, state)
+	{
+		if(triggers)
+		{
+			for(var i=0;i<triggers.length;i++)
+				if(value == triggers[i].name)
+					triggers[i].disabled = state;
+		}
+	};
+	
 	this.enableTrigger = function(value)
 	{
-		var trigs = this.localTriggers();
-		for(var i=0;i<trigs.length;i++)
-			if(value == trigs[i].name)
-				trigs[i].disabled = false;
-		trigs = this.globalTriggers;
-		for(var i=0;i<trigs.length;i++)
-			if(value == trigs[i].name)
-				trigs[i].disabled = false;
+		this.setTriggersStates(this.localTriggers(), value, false);
+		this.setTriggersStates(this.globalTriggers, value, false);
+		this.setTriggersStates(this.tempTriggers, value, false);
 	};
 	
 	this.disableTrigger = function(value)
 	{
-		var trigs = this.localTriggers();
-		for(var i=0;i<trigs.length;i++)
-			if(value == trigs[i].name)
-				trigs[i].disabled = true;
-		trigs = this.globalTriggers;
-		for(var i=0;i<trigs.length;i++)
-			if(value == trigs[i].name)
-				trigs[i].disabled = true;
+		this.setTriggersStates(this.localTriggers(), value, true);
+		this.setTriggersStates(this.globalTriggers, value, true);
+		this.setTriggersStates(this.tempTriggers, value, true);
 	};
 	
 	this.setColor = function(value)
@@ -1319,6 +1498,7 @@ function AddNewSipletTabByPB(which)
 	siplet.pbwhich = ogwhich;
 	setInputVisibility(!pb.disableInput);
 	setInputBoxFocus();
+	ReConfigureTopMenu(siplet);
 	return siplet;
 }
 
@@ -1383,6 +1563,7 @@ function SetCurrentTab(which)
 	else
 		setInputVisibility(true);
 	setInputBoxFocus();
+	ReConfigureTopMenu(window.currWin);
 	return window.currWin;
 }
 
@@ -1465,12 +1646,12 @@ function UpdateSipetTabsByPBIndex(which)
 	}
 }
 
-function PostEvent(event)
+function PostGlobalEvent(event)
 {
 	for(var k in window.siplets)
 	{
 		try {
-			window.siplets[k].plugins.postEvent(event);
+			window.siplets[k].dispatchEvent(event);
 		} catch(e) {
 			console.error(e);
 		}
@@ -1478,12 +1659,11 @@ function PostEvent(event)
 }
 
 setTimeout(function() {
-	window.sampleSiplet = new SipletWindow('sample');
 	var updateSipletConfigs = function() {
 		for(var i=0;i<window.siplets.length;i++)
 		{
 			var siplet = window.siplets[i];
-			siplet.maxLines = getConfig('window/lines','5000');
+			siplet.maxLines = getConfig('window/lines', '5000');
 			siplet.overflow = getConfig('window/overflow','');
 			siplet.fixOverflow();
 		}

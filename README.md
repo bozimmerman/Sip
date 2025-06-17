@@ -93,17 +93,18 @@ or
 
 ## Contributing
 
-Sip is a passion project, but contributions are welcome! Fork the repository, make your changes, and contact the author to review your changes.
+Sip is a passion project, but contributions are welcome! Fork the repository, make your changes, and contact the author to review your changes (no pull requests, please).
 
 ## License
 
-Sip is released under the [Apache 2.0 License](LICENSE).
+Sip is Copyright by Bo Zimmerman, and released under the [Apache 2.0 License](LICENSE).
 
 ## Acknowledgments
 
 - Built with [Electron](https://www.electronjs.org/) for cross-platform desktop support.
 - Thanks to the CoffeeMUD community for their support and feedback.
 - CodeMirror.js is included under the MIT License. https://github.com/codemirror/CodeMirror.
+- All images are courtesy of various public domain/CCO libraries.
 
 ## Contact
 
