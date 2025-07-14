@@ -21,7 +21,7 @@ function SipletWindow(windowName)
 	this.charHeight = parseFloat(getConfig('window/fontsize', '16px')) * 0.7;
 	this.pixelWidth = 800;
 	this.pixelHeight = 600;
-	this.maxLines = getConfig('window/lines',5000);
+	this.maxLines = getConfig('window/lines',1000);
 	this.MSDPsupport = false;
 	this.GMCPsupport = false;
 	this.MSPsupport = false;
@@ -1553,7 +1553,8 @@ function SetCurrentTab(which)
 			s.topWindow.style.visibility = "hidden";
 			if(s.wsopened)
 			{
-				s.tab.style.backgroundColor = "lightgray";
+				if(s.tab.style.backgroundColor !== 'lightgreen')
+					s.tab.style.backgroundColor = "lightgray";
 				s.tab.style.color = "black";
 			}
 		}
@@ -1663,7 +1664,7 @@ setTimeout(function() {
 		for(var i=0;i<window.siplets.length;i++)
 		{
 			var siplet = window.siplets[i];
-			siplet.maxLines = getConfig('window/lines', '5000');
+			siplet.maxLines = getConfig('window/lines', '1000');
 			siplet.overflow = getConfig('window/overflow','');
 			siplet.fixOverflow();
 		}
