@@ -27,9 +27,10 @@ function SipletWindow(windowName)
 	this.MSPsupport = false;
 	this.MXPsupport = false;
 	this.MCCPsupport = false;
+	this.decompressor = null;
 	this.wsopened = false;
 	this.windowName = windowName;
-	this.bin = new BPPARSE(false);
+	this.bin = new BPPARSE(this,false);
 	this.ansi = new ANSISTACK(this);
 	this.telnet = new TELNET(this);
 	this.msp = new MSP(this);
@@ -292,6 +293,7 @@ function SipletWindow(windowName)
 		this.GMCPsupport = false;
 		this.MXPsupport = false;
 		this.MCCPsupport = false;
+		this.decompressor = null;
 		this.wsopened = false;
 		this.bin.reset();
 		this.ansi.reset();
