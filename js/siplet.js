@@ -6,7 +6,7 @@ window.nextId = 0;
 var Siplet =
 {
 	VERSION_MAJOR: '3.1',
-	VERSION_MINOR: '3',
+	VERSION_MINOR: '4',
 	NAME: window.isElectron?'Sip':'Siplet',
 	R: /^win\.[\w]+(\.[\w]+)*$/
 };
@@ -101,7 +101,7 @@ function SipletWindow(windowName)
 		var paddingRight = parseFloat(computedStyle.paddingRight);
 		var borderLeft = parseFloat(computedStyle.borderLeftWidth);
 		var borderRight = parseFloat(computedStyle.borderRightWidth);
-		var contentWidth = pixelWidth - paddingLeft - paddingRight - borderLeft - borderRight -17;
+		var contentWidth = pixelWidth - paddingLeft - paddingRight - borderLeft - borderRight;
 		var paddingTop = parseFloat(computedStyle.paddingTop);
 		var paddingBottom = parseFloat(computedStyle.paddingBottom);
 		var borderTop = parseFloat(computedStyle.borderTopWidth);
@@ -188,6 +188,11 @@ function SipletWindow(windowName)
 		this.wsocket = new WebSocket(url);
 		this.wsocket.binaryType = "arraybuffer";
 		this.wsocket.onmessage = this.onReceive;
+		if(this.tab)
+		{
+			this.tab.style.backgroundColor="yellow";
+			this.tab.style.color="black";
+		}
 		this.wsocket.onopen = function(event)  
 		{
 			me.dispatchEvent({type: 'connect',data:url});
