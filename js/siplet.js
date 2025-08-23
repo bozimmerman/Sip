@@ -6,7 +6,7 @@ window.nextId = 0;
 var Siplet =
 {
 	VERSION_MAJOR: '3.1',
-	VERSION_MINOR: '5',
+	VERSION_MINOR: '6',
 	NAME: window.isElectron?'Sip':'Siplet',
 	R: /^win\.[\w]+(\.[\w]+)*$/
 };
@@ -39,7 +39,8 @@ function SipletWindow(windowName)
 	this.mapper = new Mapper(this);
 	this.text = new TEXT([this.mxp,this.msp]);
 	this.topWindow = document.getElementById(windowName);
-	if(this.topWindow) this.topWindow.sipwin = this;
+	if(this.topWindow) 
+		this.topWindow.sipwin = this;
 	this.wsocket = null;
 	this.gauges=[];
 	this.gaugeWindow = null;
@@ -180,6 +181,11 @@ function SipletWindow(windowName)
 		this.fixOverflow();
 		this.plugins.reset();
 		this.resizeTermWindow(fontFace, fontSize);
+		this.window.addEventListener('paste', function() {
+			event.preventDefault();
+			var text = (event.clipboardData || window.clipboardData).getData('text');
+			addToPrompt(text,false);
+		});
 	}
 	
 	this.connect = function(url)
@@ -510,11 +516,11 @@ function SipletWindow(windowName)
 					while(match !== null)
 					{
 						for(var i=0;i<match.length;i++)
-							this.setVariable('match'+i,match[i]);
+							this.setEntity('match'+i,match[i]);
 						trig.prev = this.textBufferPruneIndex + match.index + 1;
 						this.executeAction(trig.action);
 						for(var i=0;i<match.length;i++)
-							this.setVariable('match'+i,null);
+							this.setEntity('match'+i,null);
 						match = trig.pattern.exec(this.textBuffer);
 						if(trig.once)
 							trig.disabled=true;
@@ -688,11 +694,11 @@ function SipletWindow(windowName)
 					if(match !== null)
 					{
 						for(var i=0;i<match.length;i++)
-							this.setVariable('match'+i,match[i]);
+							this.setEntity('match'+i,match[i]);
 						txt = txt.replace(alias.pattern,this.fixVariables(alias.replace));
 						this.executeAction(alias.action);
 						for(var i=0;i<match.length;i++)
-							this.setVariable('match'+i,null);
+							this.setEntity('match'+i,null);
 						return txt
 					}
 				}
@@ -1146,7 +1152,7 @@ function SipletWindow(windowName)
 
 	this.displayAt = function(value, frame)
 	{
-		var framechoices = mxp.getFrameMap();
+		var framechoices = this.mxp.getFrameMap();
 		if(!(frame in framechoices))
 			return;
 		var frame = framechoices[frame];
@@ -1180,23 +1186,24 @@ function SipletWindow(windowName)
 		this.msp.PlaySound(key,url,0,50,50);
 	};
 
-	this.setVariable = function(key, value)
+	this.setEntity = function(key, value)
 	{
 		if((key !== undefined)&&(value !== undefined)&&(key != null))
 		{
-			key = this.fixVariables(key);
 			if(value == null)
-				delete this.mxp.entities[key];
+				delete this.mxp.entities[key.toLowerCase()];
 			else 
 				this.mxp.modifyEntity(key, this.fixVariables(value));
 			
 		}
 	};
 	
-	this.getVariable = function(key)
+	this.getEntity = function(key)
 	{
-		if(key in this.mxp.entities)
-			return this.fixVariables(this.mxp.entities[key]);
+		if((key === undefined)||(key == null))
+			return '';
+		if(key.toLowerCase() in this.mxp.entities)
+			return this.fixVariables(this.mxp.entities[key.toLowerCase()]);
 		return '';
 	};
 	
@@ -1461,13 +1468,13 @@ function AddNewSipletTabByPB(which)
 	var ogwhich = ''+which;
 	var global = ogwhich.startsWith('g');
 	var pb;
+	var disableInput = getConfig('window/disableInput','')==''?false:true;
 	if(global)
 	{
 		which = Number(ogwhich.substr(1));
 		if((which<0) || (which > window.phonebook.length))
 			return;
 		pb = window.phonebook[which];
-		pb.disableInput = getConfig('window/disableInput','')==''?false:true;
 	}
 	else
 	{
@@ -1476,6 +1483,8 @@ function AddNewSipletTabByPB(which)
 		if((which<0) || (which > phonebook.length))
 			return;
 		pb = phonebook[which];
+		if(pb.disableInput !== undefined)
+			disableInput = pb.disableInput;
 	}
 	var port = pb.port;
 	var defaultUrl;
@@ -1492,9 +1501,9 @@ function AddNewSipletTabByPB(which)
 	}
 	var siplet;
 	if(port === 'default')
-		siplet = AddNewSipletTab(defaultUrl,!pb.disableInput);
+		siplet = AddNewSipletTab(defaultUrl,!disableInput);
 	else
-		siplet = AddNewSipletTab(defaultUrl+'?port='+port,!pb.disableInput);
+		siplet = AddNewSipletTab(defaultUrl+'?port='+port,!disableInput);
 	if(window.isElectron)
 		siplet.tabTitle = pb.name;
 	else
