@@ -65,8 +65,9 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
-            npm install -g appimage-builder
-            appimage-builder --recipe AppImageBuilder.yml --skip-test
+            curl -L -o appimage-builder.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+            chmod +x appimage-builder.AppImage
+            ./appimage-builder.AppImage --recipe AppImageBuilder.yml --skip-test
           else
             npm run ${{ matrix.build_cmd }}
           fi
