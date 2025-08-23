@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             name: linux
             build_cmd: dist:linux
           - os: windows-latest
@@ -62,12 +62,15 @@ jobs:
           sudo apt-get install -y libfuse2 rpm
 
       - name: Build Sip
-        run: npm run ${{ matrix.build_cmd }}
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux appimage
+            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux deb rpm
+          else
+            npm run ${{ matrix.build_cmd }}
+          fi
         shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+  
       - name: Prepare Artifacts
         run: |
           mkdir -p out
