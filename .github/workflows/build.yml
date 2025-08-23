@@ -64,8 +64,9 @@ jobs:
       - name: Build Sip
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux appimage
-            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux deb rpm
+            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
+            npm install -g appimage-builder
+            appimage-builder --recipe AppImageBuilder.yml --skip-test
           else
             npm run ${{ matrix.build_cmd }}
           fi
