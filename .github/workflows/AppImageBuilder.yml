@@ -7,7 +7,7 @@ AppDir:
   app_info:
     id: com.planet_ink.sip
     name: Sip
-    icon: icon
+    icon: icon.png
     version: 3.1.6
     exec: Sip
     exec_args: "$@"
