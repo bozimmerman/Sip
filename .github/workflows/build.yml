@@ -64,10 +64,11 @@ jobs:
       - name: Build Sip
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
-            curl -L -o appimage-builder.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
-            chmod +x appimage-builder.AppImage
-            ./appimage-builder.AppImage --recipe .github/workflows/AppImageBuilder.yml --skip-test
+            env -i PATH="$PATH" HOME="$HOME" npm run dist:linux -- --linux dir deb rpm appimage
+            #env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
+            #curl -L -o appimage-builder.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+            #chmod +x appimage-builder.AppImage
+            #./appimage-builder.AppImage --recipe .github/workflows/AppImageBuilder.yml --skip-test
           else
             npm run ${{ matrix.build_cmd }}
           fi
