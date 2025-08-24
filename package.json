@@ -18,8 +18,8 @@
   "license": "Apache 2.0",
   "keywords": [],
   "devDependencies": {
-    "electron": "^36.3.1",
-    "electron-builder": "^26.0.18",
+    "electron": "36.3.1",
+    "electron-builder": "24.13.3",
     "@electron/remote": "^2.1.2"
    },
   "build": {
@@ -32,6 +32,7 @@
       "dialogs/**/*",
       "help/**/*",
       "images/**/*",
+      "icons/**/*",
       "js/**/*"
     ],
     "win": {
