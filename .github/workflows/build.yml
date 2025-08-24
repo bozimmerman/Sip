@@ -64,7 +64,6 @@ jobs:
       - name: Build Sip
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            apt install gstreamer1.0-tools
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
             curl -L -o appimage-builder.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/Continuous/appimage-builder-Continuous-x86_64.AppImage
             chmod +x appimage-builder.AppImage
