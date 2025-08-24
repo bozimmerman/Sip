@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Sip
-Exec=Sip
+Exec=Sip  %U --no-sandbox
 Icon=icon
 Type=Application
 Categories=Utility;
