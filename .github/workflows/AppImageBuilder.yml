@@ -3,7 +3,7 @@ script: |
   mkdir -p AppDir
   cp -r dist/linux-unpacked/* AppDir/
   mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-  cp AppDir/icon.png AppDir/usr/share/icons/hicolor/256x256/apps/icon.png
+  cp $GITHUB_WORKSPACE/icon.png AppDir/usr/share/icons/hicolor/256x256/apps/icon.png
 AppDir:
   path: ./AppDir
   app_info:
