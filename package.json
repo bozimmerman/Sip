@@ -19,8 +19,7 @@
   "keywords": [],
   "devDependencies": {
     "electron": "^36.3.1",
-    "electron-builder": "^26.0.19",
-    "@electron/remote": "^2.1.2"
+    "electron-builder": "^26.0.19"
    },
   "build": {
     "appId": "com.planet_ink.sip",
