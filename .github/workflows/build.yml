@@ -73,7 +73,7 @@ jobs:
             cd Sip.AppDir
             ln -s Sip AppRun
             cp ../.desktop Sip.desktop
-            cp ../icon.png ../Sip.png
+            cp ../icon.png icon.png
             cd ..
             ./appimagetool Sip.AppDir dist/Sip-${VERSION}.AppImage
             #curl -L -o appimage-builder.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/Continuous/appimage-builder-1.1.1.dev32+g2709a3b-x86_64.AppImage
