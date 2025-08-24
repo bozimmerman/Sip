@@ -9,7 +9,7 @@ AppDir:
     name: Sip
     icon: icon
     version: 3.1.6
-    exec: sip
+    exec: Sip
     exec_args: "$@"
 AppImage:
   arch: x86_64
