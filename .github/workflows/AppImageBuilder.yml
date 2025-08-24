@@ -1,3 +1,4 @@
+version: 1
 script: |
   mkdir -p AppDir
   cp -r dist/linux-unpacked/* AppDir/
