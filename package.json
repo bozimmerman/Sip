@@ -31,7 +31,6 @@
       "dialogs/**/*",
       "help/**/*",
       "images/**/*",
-      "icons/**/*",
       "js/**/*"
     ],
     "win": {
