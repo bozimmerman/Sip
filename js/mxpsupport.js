@@ -1277,6 +1277,9 @@ var MXP = function(sipwin)
 			if(href)
 			{
 				href = href.toLowerCase().trim();
+				if(href == '#')
+				{}
+				else
 				if(href.startsWith('javascript:')
 				&&(isValidJavaScriptLine(href.substr(11).trim())))
 				{
@@ -1284,6 +1287,28 @@ var MXP = function(sipwin)
 				}
 				else
 					E.setAttributeValue('HREF','javascript:window.alert(\'Link disabled for security reasons.\');');
+			}
+			var omo = E.getAttributeValue("ONMOUSEOVER");
+			if(omo)
+			{
+				omo = omo.toLowerCase().trim();
+				if(isValidJavaScriptLine(omo))
+				{
+					// valid javascript call, do nothing
+				}
+				else
+					E.setAttributeValue('ONMOUSEOVER','');
+			}
+			var onclk = E.getAttributeValue("ONCLICK");
+			if(onclk)
+			{
+				onclk = onclk.toLowerCase().trim();
+				if(isValidJavaScriptLine(onclk))
+				{
+					// valid javascript call, do nothing
+				}
+				else
+					E.setAttributeValue('ONCLICK','');
 			}
 		}
 		else
@@ -1792,9 +1817,10 @@ var MXP = function(sipwin)
 						MakeDraggable(newTopWindow);
 					}
 					var contentWindow = document.createElement('div');
-					contentWindow.style.cssText = "position:absolute;top:"+contentTop+"px;left:0%;height:calc(100% - "+contentTop+");width:100%;";
+					contentWindow.style.cssText = "position:absolute;top:"+contentTop+";left:0%;height:calc(100% - "+contentTop+");width:100%;";
 					contentWindow.style.backgroundColor = 'black';
 					contentWindow.style.color = 'white';
+					contentWindow.style.top = contentTop;
 					newTopWindow.sprops = sprops;
 				    contentWindow.style.overflowY = 'hidden';
 				    contentWindow.style.overflowX = 'hidden';

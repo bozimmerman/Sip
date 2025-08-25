@@ -204,17 +204,6 @@ function MapRoom(args)
 		for(var key in args)
 			this[key] = args[key]
 	}
-	this.getExitDir = function(dir)
-	{
-		if(dir !== 'special')
-			dir = GetDirCode(dir);
-		if(!dir)
-			return null;
-		for(var i=0;i<this.exits.length;i++)
-			if(this.exits[i].dir == dir)
-				return this.exits[i];
-		return null;
-	}
 }
 
 function MapExit(args)
@@ -265,6 +254,18 @@ function Mapper(sipwin)
 		this.customEvents = {};
 	};
 	this.deleteMap();
+	
+	this.getExitDir = function(room, dir)
+	{
+		if(dir !== 'special')
+			dir = GetDirCode(dir);
+		if(!dir)
+			return null;
+		for(var i=0;i<room.exits.length;i++)
+			if(room.exits[i].dir == dir)
+				return room.exits[i];
+		return null;
+	};
 	
 	this.findAreaId = function(areaName) {
 		if(areaName && (areaName in this.areas))
@@ -389,7 +390,7 @@ function Mapper(sipwin)
 		if((roomId in this.rooms) || !(areaId in this.areas))
 			return null;
 		var room = new MapRoom({
-			areaId: areaId
+			areaId: Number(areaId)
 		});
 		this.rooms[roomId] = room;
 		return roomId;
@@ -572,13 +573,13 @@ function Mapper(sipwin)
 	this.clearSpecialExits = function(roomId) {
 		if(roomId in this.rooms && this.rooms[roomId].exits) {
 			var room = this.rooms[roomId];
-			var exit = room.getExitDir('special');
+			var exit = this.getExitDir(room,'special');
 			while(exit != null)
 			{
 				var x = room.exits.indexOf(exit);
 				if(x<0) break;
 				room.exits.splice(x,1);
-				exit = room.getExitDir('special');
+				exit = this.getExitDir(room,'special');
 			}
 		}
 	};
@@ -625,7 +626,7 @@ function Mapper(sipwin)
 				}
 				if (!dir)
 					return false;
-				var existingExit = fromR.getExitDir(dir);
+				var existingExit = this.getExitDir(fromR,dir);
 				if (existingExit && existingExit.roomId == toId)
 					return true;
 				if (existingExit)
@@ -651,7 +652,7 @@ function Mapper(sipwin)
 		}
 	
 		if (toId in this.rooms) {
-			var existingExit = fromR.getExitDir(direction);
+			var existingExit = this.getExitDir(fromR,direction);
 			if (existingExit) {
 				if (existingExit.roomId == toId)
 					return true;
@@ -670,7 +671,7 @@ function Mapper(sipwin)
 			var delta = window.DirCodeDeltas[direction];
 			if (!delta)
 				return false; // Invalid direction
-			var existingExit = fromR.getExitDir(direction);
+			var existingExit = this.getExitDir(fromR,direction);
 			if (existingExit !== null)
 				return false;
 			var expectedX = fromR.x + delta.x;
@@ -679,7 +680,7 @@ function Mapper(sipwin)
 			for (var id in this.rooms) {
 				var room = this.rooms[id];
 				if (room.x === expectedX && room.y === expectedY && room.z === expectedZ &&
-					room.exits && room.getExitDir(oppositeDir) && room.getExitDir(oppositeDir).roomId == '') {
+					room.exits && this.getExitDir(room,oppositeDir) && this.getExitDir(room,oppositeDir).roomId == '') {
 					var exit = new MapExit({
 						roomId: id,
 						dir: direction
@@ -2162,7 +2163,7 @@ function Mapper(sipwin)
 		var distances = {};
 		var previous = {};
 		var commands = {};
-		var queue = new Set(Object.keys(this.rooms));
+		var queue = Object.keys(this.rooms);
 		distances[fromId] = 0;
 		queue.forEach(function(id) {
 			if (id != fromId) 
@@ -2170,18 +2171,20 @@ function Mapper(sipwin)
 			previous[id] = null;
 			commands[id] = null;
 		});
-		while (queue.size > 0) {
+		while (queue.length > 0) {
 			var minDist = Infinity;
 			var currentId = null;
-			queue.forEach(function(id) {
+			var currentIdx = null;
+			queue.forEach(function(id, idx) {
 				if (distances[id] < minDist) {
 					minDist = distances[id];
 					currentId = id;
+					currentIdx = idx;
 				}
 			});
 			if (!currentId || currentId == toId) 
 				break;
-			queue.delete(currentId);
+			queue.splice(currentIdx,1);
 			if (this.roomLocked(currentId)) 
 				continue;
 			var exits = this.getRoomExits(currentId);
@@ -2189,7 +2192,7 @@ function Mapper(sipwin)
 			var roomWeight = this.getRoomWeight(currentId) || 1;
 			for (var dir in exits) {
 				var toId2 = exits[dir];
-				if (!(toId2 in this.rooms) || !queue.has(toId2)) 
+				if (!(toId2 in this.rooms) || !queue.some(id => id == toId2)) 
 					continue;
 				if (this.hasExitLock(currentId, dir))
 					continue;
@@ -2203,7 +2206,7 @@ function Mapper(sipwin)
 			}
 			for (var toId2 in specialExits) 
 			{
-				if (!(toId2 in this.rooms) || !queue.has(toId2)) 
+				if (!(toId2 in this.rooms) || !queue.some(id => id == toId2))
 					continue;
 				if (this.hasSpecialExitLock(currentId, toId2, specialExits[toId2][0])) 
 					continue;
@@ -2212,7 +2215,7 @@ function Mapper(sipwin)
 				if (altDist < distances[toId2]) {
 					distances[toId2] = altDist;
 					previous[toId2] = currentId;
-					commands[toId2] = specialExits[toId][0];
+					commands[toId2] = specialExits[toId2][0];
 				}
 			}
 		}
@@ -2282,9 +2285,9 @@ function Mapper(sipwin)
 	};
 	this.getRoomCoordinates = function(roomId) {
 		if(!(roomId in this.rooms))
-			return null;
+			return [null, null, null];
 		var room = this.rooms[roomId];
-		return {x:room.x,y:room.y,z:room.z};
+		return [room.x,room.y,room.z];
 	};
 	this.getRoomEnv = function(roomId) {
 		if(!(roomId in this.rooms))
@@ -2432,7 +2435,7 @@ function Mapper(sipwin)
 		direction = GetDirCode(direction);
 		if(!direction)
 			return false;
-		var ex = room.getExitDir(direction);
+		var ex = this.getExitDir(room,direction);
 		if(ex == null)
 			return false;
 		return ex.blocked;
@@ -2501,7 +2504,7 @@ function Mapper(sipwin)
 		direction = GetDirCode(direction);
 		if(!direction)
 			return;
-		var ex = room.getExitDir(direction);
+		var ex = this.getExitDir(room,direction);
 		if(ex == null)
 			return;
 		ex.blocked = lockIfTrue;
@@ -2777,6 +2780,7 @@ function Mapper(sipwin)
 			all.push(k);
 		return SortArray(all);
 	};
+
 	this.setAreaName = function(areaId, newName) {
 		if(!newName)
 			return true;
@@ -2796,6 +2800,7 @@ function Mapper(sipwin)
 		}
 		return false;
 	};
+
 	this.setAreaUserData = function(areaId, key, value) {
 		if(areaId in this.areas)
 		{
@@ -2805,6 +2810,7 @@ function Mapper(sipwin)
 			area.userData[key] = value;
 		}
 	};
+
 	this.setCustomEnvColor = function(environmentId, r,g,b,a) {
 		if(environmentId in window.MapEnvs)
 			return false; // reserved for system or user
@@ -2822,7 +2828,7 @@ function Mapper(sipwin)
 		var dirCode = GetDirCode(exitCommand);
 		if((!dirCode)||(!room.exits))
 			return false;
-		var exit = room.getExitDir(dirCode);
+		var exit = this.getExitDir(room,dirCode);
 		if(exit)
 		{
 			if(doorStatus < 0)
@@ -2847,7 +2853,7 @@ function Mapper(sipwin)
 		if(!(fromId in this.rooms))
 			return false;
 		var fromRoom = this.rooms[fromId];
-		var fexit = fromRoom.getExitDir(direction);
+		var fexit = this.getExitDir(fromRoom,direction);
 		if(fexit)
 		{
 			if(toId < 0)
@@ -2876,7 +2882,7 @@ function Mapper(sipwin)
 		fromRoom.exits.push(fexit);
 		return true;
 	};
-	
+
 	this.setExitStub = function(roomId, direction, set) {
 		direction = GetDirCode(direction);
 		if(!direction)
@@ -2884,7 +2890,7 @@ function Mapper(sipwin)
 		if(!(roomId in this.rooms))
 			return false;
 		var room = this.rooms[roomId];
-		var exit = room.getExitDir(direction);
+		var exit = this.getExitDir(room,direction);
 		if(exit)
 		{
 			if((exit.roomId !== '')
@@ -2931,7 +2937,7 @@ function Mapper(sipwin)
 					exit = room.exits[k];
 		}
 		else
-			exit = room.getExitDir(dir);
+			exit = this.getExitDir(room,dir);
 		if(!exit)
 			return false;
 		exit.weight = weight;
@@ -3119,7 +3125,7 @@ function Mapper(sipwin)
 		delay = (typeof delay === 'number') ? delay : 0;
 		show = show !== false;
 		var commands = [];
-		var pattern = /(\d+)?([^,]+)(?=[^,]|$)/gi;
+		var pattern = /(\d+)?([^,]+)(?=,|$)/gi;
 		var match;
 		while ((match = pattern.exec(dirString.toLowerCase())) !== null) 
 		{
