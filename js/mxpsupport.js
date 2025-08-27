@@ -359,8 +359,8 @@ window.defElements = {
 	"PASSWORD": new MXPElement("PASSWORD", "", "", "", MXPBIT.COMMAND | MXPBIT.SPECIAL),
 	"IMAGE": new MXPElement("IMAGE", "<IMG SRC=\"&url;&fname;\" HEIGHT=&h; WIDTH=&w; ALIGN=&align;>", 
 			"FNAME URL T H W HSPACE VSPACE ALIGN ISMAP", "", MXPBIT.COMMAND, "HSPACE VSPACE ISMAP"),
-	"IMG": new MXPElement("IMG", "<IMG SRC=\"&src;\" HEIGHT=&height; WIDTH=&width; ALIGN=&align;>", 
-			"SRC HEIGHT=70 WIDTH=70 ALIGN", "", MXPBIT.COMMAND),
+	"IMG": new MXPElement("IMG", "<IMG SRC=\"&src;\" HEIGHT=&height; WIDTH=&width; ALIGN=&align; STYLE=&style;>", 
+			"SRC HEIGHT=70 WIDTH=70 ALIGN STYLE", "", MXPBIT.COMMAND),
 	"FILTER": new MXPElement("FILTER", "", "SRC DEST NAME", "", MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
 	"SCRIPT": new MXPElement("SCRIPT", "", "", "", MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
 	"ENTITY": new MXPElement("ENTITY", "", "NAME VALUE DESC PRIVATE PUBLISH DELETE ADD", 
@@ -381,8 +381,8 @@ window.defElements = {
 	"AT": new MXPElement("AT", "", "NAME ATT", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"SOUND": new MXPElement("SOUND", "", "FNAME V=100 L=1 P=50 T U", "", MXPBIT.COMMAND|MXPBIT.SPECIAL),
 	"MUSIC": new MXPElement("MUSIC", "", "FNAME V=100 L=1 P=50 T U", "", MXPBIT.COMMAND|MXPBIT.SPECIAL),
-	"INPUT": new MXPElement("INPUT", "<INPUT TYPE=&type; value=\"&value;\" onchange=\"SipWin(this).setEntity('&name;',this.value);SipWin(this).dispatchEvent('&name;');\" onclick=\"SipWin(this).dispatchEvent('&name;');\">", 
-		"NAME TYPE VALUE", "", MXPBIT.COMMAND)
+	"INPUT": new MXPElement("INPUT", "<INPUT NAME=&name; &checked; TYPE=&type; value=\"&value;\" onchange=\"SipWin(this).setEntity('&name;',this.value);SipWin(this).dispatchEvent('&name;');\" onclick=\"SipWin(this).dispatchEvent('&name;');\">", 
+		"NAME TYPE VALUE CHECKED", "", MXPBIT.COMMAND)
 	// -------------------------------------------------------------------------
 };
 
@@ -1556,7 +1556,7 @@ var MXP = function(sipwin)
 								fleft = tmp;
 							}
 							privilegedFrame.style.width = (dePct(privilegedFrame.style.width)
-														+ dePct(frame.sprops.width))+'%';
+														+ dePct(frame.sprops.pctwidth))+'%';
 							break;
 						case 1: //right
 							for(var i=peerDex+1;i<peerFrames.length-1;i++)
@@ -1566,7 +1566,7 @@ var MXP = function(sipwin)
 								fleft = tmp;
 							}
 							privilegedFrame.style.width = (dePct(privilegedFrame.style.width)
-														+ dePct(frame.sprops.width))+'%';
+														+ dePct(frame.sprops.pctwidth))+'%';
 							break;
 						case 2: // top
 							for(var i=peerDex+1;i<peerFrames.length;i++)
@@ -1576,7 +1576,7 @@ var MXP = function(sipwin)
 								ftop = tmp;
 							}
 							privilegedFrame.style.height = (dePct(privilegedFrame.style.height)
-														+ dePct(frame.sprops.height))+'%';
+														+ dePct(frame.sprops.pctheight))+'%';
 							break;
 						case 3: //bottom
 							for(var i=peerDex+1;i<peerFrames.length-1;i++)
@@ -1586,7 +1586,7 @@ var MXP = function(sipwin)
 								ftop = tmp;
 							}
 							privilegedFrame.style.height = (dePct(privilegedFrame.style.height)
-														+ dePct(frame.sprops.height))+'%';
+														+ dePct(frame.sprops.pctheight))+'%';
 							break;
 						}
 						for(var k in this.frames)
@@ -1666,6 +1666,8 @@ var MXP = function(sipwin)
 						var calced = getComputedStyle(sipwin.window);
 						width=fixISize(width,calced.width); // ensure they are %
 						height=fixISize(height,calced.height);
+						sprops.pctwidth = width;
+						sprops.pctheight = height;
 						var newContainerDiv = document.createElement('div');
 						newContainerDiv.style.cssText = containerDiv.style.cssText;
 						containerDiv.appendChild(newContainerDiv);
@@ -1739,16 +1741,16 @@ var MXP = function(sipwin)
 						}
 						if((scrolling!=null) && (scrolling.toLowerCase() == 'yes'))
 						{
-						    newContentWindow.style.overflowY = 'auto';
-						    newContentWindow.style.overflowX = 'auto';
+							newContentWindow.style.overflowY = 'auto';
+							newContentWindow.style.overflowX = 'auto';
 						}
 						else
 						if((scrolling!=null) && (scrolling.toLowerCase() == 'x'))
-						    newContentWindow.style.overflowX = 'auto';
+							newContentWindow.style.overflowX = 'auto';
 						else
 						{
 							if((scrolling!=null) && (scrolling.toLowerCase() == 'y'))
-							    newContentWindow.style.overflowY = 'auto';
+								newContentWindow.style.overflowY = 'auto';
 							newContentWindow.style.overflowWrap = 'break-word';
 							newContentWindow.style.wordWrap = 'break-word';
 							newContentWindow.style.whiteSpace = 'pre-wrap';
@@ -1774,8 +1776,8 @@ var MXP = function(sipwin)
 						newContainerDiv.append(titleBar);
 						if((scrolling!=null) && (scrolling.toLowerCase() == 'yes'))
 						{
-						    newContentWindow.style.overflowY = 'auto';
-						    newContentWindow.style.overflowX = 'auto';
+							newContentWindow.style.overflowY = 'auto';
+							newContentWindow.style.overflowX = 'auto';
 						}
 						if(action.toUpperCase() =='REDIRECT')
 							sipwin.window = newContentWindow;
@@ -1808,6 +1810,12 @@ var MXP = function(sipwin)
 						titleBar.style.color = 'black';
 						contentTop = "20px";
 						titleBar.innerHTML = '&nbsp;'+title;
+						if((floating != null) && (floating.toLowerCase() == 'close'))
+						{
+							titleBar.innerHTML += '<IMG style="float: right; width: 16px; height: 16px;" '
+								+'ONCLICK="window.currWin.displayText(\'<FRAME NAME='+name+' ACTION=CLOSE>\');" '
+								+'SRC="images/close.gif">';
+						}
 						MakeDraggable(newTopWindow,titleBar);
 					}
 					else
@@ -1822,8 +1830,8 @@ var MXP = function(sipwin)
 					contentWindow.style.color = 'white';
 					contentWindow.style.top = contentTop;
 					newTopWindow.sprops = sprops;
-				    contentWindow.style.overflowY = 'hidden';
-				    contentWindow.style.overflowX = 'hidden';
+					contentWindow.style.overflowY = 'hidden';
+					contentWindow.style.overflowX = 'hidden';
 					if((scrolling!=null) && (scrolling.toLowerCase() == 'yes'))
 					{
 						contentWindow.style.overflowY = 'auto';
@@ -1835,7 +1843,7 @@ var MXP = function(sipwin)
 					else
 					{
 						if((scrolling!=null) && (scrolling.toLowerCase() == 'y'))
-						    contentWindow.style.overflowY = 'auto';
+							contentWindow.style.overflowY = 'auto';
 						contentWindow.style.overflowWrap = 'break-word';
 						contentWindow.style.wordWrap = 'break-word';
 						contentWindow.style.whiteSpace = 'pre-wrap';

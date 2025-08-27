@@ -224,7 +224,8 @@ function butt(t,js)
 		+"onclick=\""+js+"\"><font face=\"Arial\" color=\"purple\" size=\"-2\"><b>"+t+"</b></font></span>";
 }
 
-function extractUnclosedFontTags(span, htmlBuffer) {
+function extractUnclosedFontTags(span, htmlBuffer) 
+{
 	if(!htmlBuffer)
 		return '';
 	var w = '';
@@ -250,7 +251,8 @@ function extractUnclosedFontTags(span, htmlBuffer) {
 	return w;
 }
 
-function SiPrompt(text, callback) {
+function SiPrompt(text, callback) 
+{
 	var overlay = document.createElement("div");
 	overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999";
 	overlay.onkeydown = function(e) { e.stopPropagation(); };
@@ -472,7 +474,8 @@ function SiFilePicker(labelText, callback, multiple = false)
 	};
 }
 
-function SiAlert(text) {
+function SiAlert(text) 
+{
 	var overlay = document.createElement("div");
 	overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999";
 	overlay.onkeydown = function(e) { e.stopPropagation(); };
@@ -712,7 +715,47 @@ function logDat(typ, dat, opts)
 	console.log(s);
 }
 
-function SiConfirm(text, callback) {
+function SiButtons(text, buttons, callback) 
+{
+	var overlay = document.createElement("div");
+	overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999";
+	overlay.onkeydown = function(e) {
+		e.stopPropagation();
+		if (e.key == "Escape")
+			overlay.remove();
+	};
+	var dialog = document.createElement("div");
+	dialog.style = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#000;color:#fff;border:1px solid #fff;padding:10px";
+	var label = document.createElement("div");
+	label.textContent = text;
+	var buttonContainer = document.createElement("div");
+	buttonContainer.style = "display: flex; justify-content: space-around; margin-top: 10px;";
+	var buttonElems = [];
+	for(var i=0;i<buttons.length;i++)
+	{
+		function addButton(buttonName)
+		{
+			var button = document.createElement("button");
+			button.textContent = buttonName;
+			button.onclick = function() 
+			{
+				overlay.remove();
+				callback(buttonName);
+			};
+			buttonElems.push(button);
+		}
+		addButton(buttons[i]);
+	}
+	for(var i=0;i<buttonElems.length;i++)
+		buttonContainer.append(buttonElems[i]);
+	dialog.append(label, buttonContainer);
+	overlay.append(dialog);
+	document.body.append(overlay);
+	setTimeout(function() { buttonElems[0].focus() }, 0);
+}
+
+function SiConfirm(text, callback) 
+{
 	var overlay = document.createElement("div");
 	overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999";
 	overlay.onkeydown = function(e) {
@@ -957,16 +1000,20 @@ function EnsureQuotedStringArguments(str, args, okRegex)
 	return str;
 }
 
-function isValidJavaScriptLine(str) {
+function isValidJavaScriptLine(str) 
+{
 	if (!str)
 		return false;
 	str = str.toLowerCase().trim();
 	if (!((str.startsWith('window.currwin.'))
 	|| (str.startsWith('addtoprompt'))
 	|| (str.startsWith('contextdelayhide'))
+	|| (str.startsWith('return mxpcontextmenu'))
 	|| (str.startsWith('win.'))))
 		return false;
 
+	if(str.startsWith('return '))
+		str = str.substr(7).trim();
 	const prefixRegex = /^\s*(?:[a-za-z_$][a-za-z_$0-9]*\s*\.\s*)*[a-za-z_$][a-za-z_$0-9]*\s*\(/;
 	const prefixMatch = str.match(prefixRegex);
 	if (!prefixMatch) 
@@ -1033,6 +1080,8 @@ function isValidJavaScriptLine(str) {
 	var suffix=str.slice(closingPos+1).trim();
 	if (!/^(;)?$/.test(suffix)) 
 		return false;
+	while(inner.startsWith('this,')||inner.startsWith('event,'))
+		inner = inner.substr(inner.indexOf(',')+1).trim();
 	var sanitized='['+inner+']';
 	sanitized = sanitized
 		.replace(/\'(.*?)\'/g,'"$1"')

@@ -120,6 +120,15 @@
 							SiAlert('File is invalid JSON.');
 							return;
 						}
+						if('requires' in pcopy)
+						{
+							var requiredVersion = pcopy.requires;
+							if(CompareVersion(requiredVersion)>0)
+							{
+								SiAlert('Plugin requires version ' + requiredVersion + ' or higher.');
+								return;
+							}
+						}
 						var code='';
 						if('code' in pcopy)
 						{
@@ -151,6 +160,7 @@
 		{
 			if((!Array.isArray(media)) || (media.length == 0))
 				return;
+			var overwriteOption = 'Yes';
 			var saveMedia;
 			saveMedia = function()
 			{
@@ -159,7 +169,8 @@
 				var file = media.pop();
 				if(file.path && file.data)
 				{
-					window.sipfs.exists(file.path, function(e,tf) {
+					window.sipfs.exists(file.path, function(e,tf) 
+					{
 						if(e || !tf)
 						{
 							window.sipfs.save(file.path, file.data, function(e){
@@ -167,11 +178,29 @@
 							});
 						}
 						else
-						SiConfirm('Overwrite '+file.path+'?', function(r){
+						if(overwriteOption === 'All')
+						{
 							window.sipfs.save(file.path, file.data, function(e){
 								saveMedia();
 							});
-						});
+						}
+						else
+						if(overwriteOption === 'Yes' || overwriteOption === 'No')
+						{
+							var buttons = ['All','Yes','No', 'Cancel'];
+							SiButtons('Overwrite '+file.path+'?', buttons, function(r){
+								overwriteOption = r;
+								if((overwriteOption === 'Yes')||(overwriteOption === 'All'))
+								{
+									window.sipfs.save(file.path, file.data, function(e){
+										saveMedia();
+									});
+								}
+								else
+								if(overwriteOption === 'No')
+									saveMedia();
+							});
+						}
 					});
 				}
 				else
@@ -546,6 +575,7 @@
 				var newp = {
 				  "name": name,
 				  "version": 1,
+				  "requires": VERSION_MAJOR+'.'+VERSION_MINOR,
 				  "code": "",
 				  "mxp":"",
 				  "triggers": [],
