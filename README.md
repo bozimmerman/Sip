@@ -20,7 +20,7 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 
 ## Screenshots
 
-![Sip Screen](https://zimmers.net/home/mud/sip.jpg)
+![Sip Screen](https://zimmers.net/home/mud/sip2.jpg)
 
 ## Binaries
  - Sip-3.2.6.linux.AppImage (Linux Ubuntu 18.04+, Debian 10+, Fedora 32+, or equivalents)
@@ -126,4 +126,5 @@ For questions, bug reports, or feature requests, reach out via:
 ---
 
 Sip: Savor the Experience! ☕
+
 
