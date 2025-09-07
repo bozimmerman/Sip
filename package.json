@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
-    "dist:win": "electron-builder --win --ia32 --x64 --publish never",
-    "dist:linux": "electron-builder --linux --publish never",
-    "dist:mac": "electron-builder --mac --publish never"
+    "dist:win": "node update-version.js && electron-builder --win --ia32 --x64 --publish never",
+    "dist:linux": "node update-version.js && electron-builder --linux --publish never",
+    "dist:mac": "node update-version.js && electron-builder --mac --publish never"
   },
   "author": {
     "name": "Bo Zimmerman",
