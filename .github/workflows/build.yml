@@ -64,8 +64,8 @@ jobs:
       - name: Build Sip
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            VERSION=$(jq -r .version package.json)
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
+            VERSION=$(jq -r .version package.json)
             curl -L -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
             chmod +x appimagetool
             mkdir Sip.AppDir
