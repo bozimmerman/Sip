@@ -377,12 +377,12 @@ function SipletWindow(windowName)
 	
 	this.htmlBuffer = '';
 	this.numLines = 0;
+	
 	this.flushWindow = function() 
 	{
 		if(this.htmlBuffer.length > 0)
 		{
 			var rescroll = this.isAtBottom(-10);
-			var span = document.createElement('span');
 			var reprocess = '';
 			if(this.mxp.openElements.length)
 			{
@@ -397,6 +397,7 @@ function SipletWindow(windowName)
 			this.numLines += brCount(this.htmlBuffer);
 			if(this.debugFlush)
 				console.log('Flush: '+this.htmlBuffer);
+			var span = document.createElement('span');
 			span.innerHTML = this.htmlBuffer;
 			updateMediaImagesInSpan(this.sipfs, span);
 			this.window.appendChild(span);
@@ -408,12 +409,17 @@ function SipletWindow(windowName)
 				this.tab.style.backgroundColor = "lightgreen";
 				this.tab.style.color = "black";
 			}
-			while((this.numLines > me.maxLines)
+			if((this.numLines > me.maxLines)
 			&&(this.window.childElementCount > 1))
 			{
-				var child = this.window.firstChild;
-				this.numLines -= brCount(child.innerHTML);
-				this.window.removeChild(child);
+				var downMax = me.maxLines * 3 / 4;
+				while((this.numLines > downMax)
+				&&(this.window.childElementCount > 1))
+				{
+					var child = this.window.firstChild;
+					this.numLines -= brCount(child.innerHTML);
+					this.window.removeChild(child);
+				}
 			}
 			if(rescroll)
 				this.scrollToBottom(this.window,0);
@@ -421,6 +427,7 @@ function SipletWindow(windowName)
 		}
 	};
 	
+		
 	this.onReceive = function(e)
 	{
 		var entries = me.bin.parse(e.data);
@@ -1594,14 +1601,24 @@ function AddNewSipletTab(url, ib)
 		ib = (getConfig('window/disableInput','')==''?true:false);
 	var windowName = 'W'+window.nextId;
 	window.nextId++;
+	var host = document.createElement('DIV');
+	window.windowArea.appendChild(host);
+	var shadow = host.attachShadow({mode: 'open'});
+	var slot = document.createElement('slot');
+	shadow.appendChild(slot);
 	var newTopElement=document.createElement('DIV');
 	var newWinContainer=document.createElement('DIV');
 	var newWindow=document.createElement('DIV');
 	newTopElement.id = windowName;
-	window.windowArea.appendChild(newTopElement);
+	host.appendChild(newTopElement);
 	newTopElement.appendChild(newWinContainer);
 	newWinContainer.appendChild(newWindow);
 	newWinContainer.style.cssText = 'position:absolute;top:0%;left:0%;width:100%;height:100%;'
+	host.style.position='absolute';
+	host.style.top = '0%';
+	host.style.height = '100%';
+	host.style.width = '100%';
+	host.style.left = '0%';
 	var siplet = new SipletWindow(windowName); // makes a deep copy
 	siplet.tab = AddNewTab();
 	siplet.tab.innerHTML = 'Connecting to ' + url + '...';
