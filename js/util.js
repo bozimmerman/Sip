@@ -77,14 +77,20 @@ function SortArray(arr)
 {
 	return arr.sort(function(a, b) 
 	{
-		if (a == null && b == null) return 0;
-		if (a == null) return 1;
-		if (b == null) return -1;
+		if(a == null && b == null) 
+			return 0;
+		if(a == null) 
+			return 1;
+		if(b == null) 
+			return -1;
 		const isANumber = typeof a === 'number' && !isNaN(a);
 		const isBNumber = typeof b === 'number' && !isNaN(b);
-		if (isANumber && !isBNumber) return -1;
-		if (!isANumber && isBNumber) return 1;
-		if (isANumber && isBNumber) return a - b;
+		if(isANumber && !isBNumber) 
+			return -1;
+		if(!isANumber && isBNumber) 
+			return 1;
+		if(isANumber && isBNumber) 
+			return a - b;
 		return String(a).localeCompare(String(b));
 	});
 }
@@ -113,7 +119,8 @@ function isValidAction(s)
 	if(!s) 
 		return false;
 	var x = s.indexOf('(');
-	if(x<0) return false;
+	if(x<0) 
+		return false;
 	if((!s.endsWith(')'))&&(!s.endsWith(');'))) 
 		return false;
 	var cmd = s.substr(0,x);
@@ -138,11 +145,13 @@ function isValidExpression(exp) {
 		var inComment = false;
 		for (var i = 0; i < exp.length; i++) 
 		{
-			if (inComment) {
+			if(inComment) 
+			{
 				inComment =  (exp[i] !== '\n');
 				continue;
 			}
-			if (inString) {
+			if(inString) 
+			{
 				inString =  ! (exp[i] === stringChar && exp[i - 1] !== '\\');
 				continue;
 			}
@@ -211,12 +220,6 @@ function escapeHTML(s)
 		.replace(/'/g, '&#39;');
 }
 
-function brCount(s)
-{
-	var matches = s.match(/<br\s*\/?>/gi) || [];
-	return matches.length;
-}
-
 function butt(t,js)
 {
 	return "<span style=\"display: inline-block; background-image: url('images/lilButt.gif'); background-position: center;"
@@ -265,8 +268,10 @@ function SiPrompt(text, callback)
 	input.maxLength = 30;
 	input.onkeydown = function(e) {
 		e.stopPropagation();
-		if (e.key == "Enter") button.click();
-		if (e.key == "Escape") overlay.remove();
+		if(e.key == "Enter") 
+			button.click();
+		if(e.key == "Escape") 
+			overlay.remove();
 	};
 	var button = document.createElement("button");
 	button.textContent = "OK";
@@ -490,8 +495,10 @@ function SiAlert(text)
 	};
 	overlay.onkeydown = function(e) {
 		e.stopPropagation();
-		if (e.key == "Enter") button.click();
-		if (e.key == "Escape") overlay.remove();
+		if(e.key == "Enter") 
+			button.click();
+		if(e.key == "Escape") 
+			overlay.remove();
 	};
 	dialog.append(label, button);
 	overlay.append(dialog);
@@ -619,11 +626,13 @@ function SiColorPicker(text, callback, includeAlpha = false)
 		callback(result);
 	};
 	overlay.onkeydown = function(e) {
-		if (e.key == "Escape") overlay.remove();
+		if(e.key == "Escape") 
+			overlay.remove();
 	};
 	dialog.append(label, canvas, valueWrapper);
 	dialog.append(preview);
-	if (includeAlpha) dialog.append(alphaWrapper);
+	if(includeAlpha) 
+		dialog.append(alphaWrapper);
 	dialog.append(button);
 	overlay.append(dialog);
 	document.body.append(overlay);
@@ -673,7 +682,8 @@ function SiSwatchPicker(text, colors, callback)
 		callback([...selectedColor]);
 	};
 	overlay.onkeydown = function(e) {
-		if (e.key === "Escape") overlay.remove();
+		if(e.key === "Escape") 
+			overlay.remove();
 	};
 	dialog.append(label, swatchContainer, preview, button);
 	overlay.append(dialog);
@@ -1131,6 +1141,29 @@ function SafeEval(str, context)
 			result = result || values[i + 1];
 	}
 	return !!result;
+}
+
+function brCount(html)
+{
+	var re = /<br\s*\/?>/gi;
+	var matches = html.match(re) || [];
+	var cleaned = html.replace(/<[^>]+>/g,'').trim();
+	return matches.length + (cleaned.length > 0 ? 1 : 0);
+}
+
+function findNthBrPos(html, n)
+{
+	var pos = 0;
+	var re = /<br\s*\/?>/gi;
+	for(var i=0; i<n; i++)
+	{
+		re.lastIndex = pos;
+		var match = re.exec(html);
+		if(!match)
+			return -1;
+		pos = match.index + match[0].length;
+	}
+	return pos;
 }
 
 function SipWin(elem)
