@@ -54,7 +54,7 @@ function SipletWindow(windowName)
 	this.charHeight = parseFloat(getConfig('window/fontsize', '16px')) * 0.7;
 	this.pixelWidth = 800;
 	this.pixelHeight = 600;
-	this.maxLines = getConfig('window/lines',1000);
+	this.maxLines = getConfig('window/lines',10000);
 	this.MSDPsupport = false;
 	this.GMCPsupport = false;
 	this.MSPsupport = false;
@@ -191,7 +191,8 @@ function SipletWindow(windowName)
 		this.topWindow.onmouseup = function(e) 
 		{
 			ContextDelayHide(); 
-			if(e.target.tagName == 'INPUT')
+			if((e.target.tagName == 'INPUT')
+			||(e.target.tagName == 'TEXTAREA'))
 				return;
 			const selection = window.getSelection();
 			if(selection.toString().length === 0)
@@ -373,10 +374,98 @@ function SipletWindow(windowName)
 		this.resetTimers();
 		this.mxpFix();
 		this.fixOverflow();
+		this.observer.disconnect();
+		this.containerStorage.clear();
 	};
 	
 	this.htmlBuffer = '';
 	this.numLines = 0;
+	this.containerStorage = new Map();
+	
+	this.handleIntersection = function(entries) 
+	{
+		entries.forEach(function(entry)
+		{
+			var container = entry.target;
+			if (entry.isIntersecting) 
+			{
+				var storedHtml = me.containerStorage.get(container);
+				if ((storedHtml !== undefined)&&(container.innerHTML === '')) 
+				{
+					container.style.height = '';
+					container.innerHTML = storedHtml;
+				}
+			} 
+			else 
+			{
+				if(container.innerHTML !== '') 
+				{
+					var height = container.offsetHeight;
+					if (height > 0) 
+					{
+						me.containerStorage.set(container, container.innerHTML);
+						container.innerHTML = '';
+						container.style.height = height + 'px';
+					}
+				}
+			}
+		});
+	};
+
+	this.observer = new IntersectionObserver(this.handleIntersection.bind(this), 
+	{
+		root: this.window,
+		rootMargin: '300px 0px 300px 0px',
+		threshold: 0
+	});
+
+	this.flushBit = function(html)
+	{
+		html = html.replace(/<font[^>]*><\/font>/gi, '');
+		html = html.replace(/(<font[^>]*>)+$/gi, '');
+		var span = document.createElement('span');
+		span.innerHTML = html;
+		updateMediaImagesInSpan(this.sipfs, span);
+		var brCt = brCount(html);
+		var trimCount = this.maxLines / 10;
+		var container;
+		if((this.window.childElementCount == 0)
+		||(this.window.lastChild.brCount >= trimCount))
+		{
+			container = document.createElement('div');
+			container.appendChild(span);
+			this.window.appendChild(container);
+			container.brCount = 0;
+			this.observer.observe(container);
+		}
+		else
+		{
+			container = this.window.lastChild;
+			container.appendChild(span);
+		}
+		if (container.innerHTML === '') 
+		{
+			const storedHtml = this.containerStorage.get(container) || '';
+			container.style.height = '';
+			container.innerHTML = storedHtml;
+		}
+		container.brCount += brCt;
+		this.numLines += brCt;
+		if((this.numLines > this.maxLines)
+		&&(this.window.childElementCount > 1))
+		{
+			while(this.numLines > this.maxLines - trimCount)
+			{
+				var child = this.window.firstChild;
+				var brCt = child.brCount;
+				this.observer.unobserve(child);
+				this.containerStorage.delete(child);
+				this.window.removeChild(child);
+				this.numLines -= brCt;
+			}
+		}
+		return span;
+	}
 	
 	this.flushWindow = function() 
 	{
@@ -394,32 +483,16 @@ function SipletWindow(windowName)
 				}
 			}
 			this.htmlBuffer = reprocess + this.htmlBuffer;
-			this.numLines += brCount(this.htmlBuffer);
 			if(this.debugFlush)
 				console.log('Flush: '+this.htmlBuffer);
-			var span = document.createElement('span');
-			span.innerHTML = this.htmlBuffer;
-			updateMediaImagesInSpan(this.sipfs, span);
-			this.window.appendChild(span);
+			this.flushBit(this.htmlBuffer);
 			if(this.mxp.partial == null)
 				this.process(reprocess);
 			this.htmlBuffer='';
-			if(window.currWin != me)
+			if(window.currWin != this)
 			{
 				this.tab.style.backgroundColor = "lightgreen";
 				this.tab.style.color = "black";
-			}
-			if((this.numLines > me.maxLines)
-			&&(this.window.childElementCount > 1))
-			{
-				var downMax = me.maxLines * 3 / 4;
-				while((this.numLines > downMax)
-				&&(this.window.childElementCount > 1))
-				{
-					var child = this.window.firstChild;
-					this.numLines -= brCount(child.innerHTML);
-					this.window.removeChild(child);
-				}
 			}
 			if(rescroll)
 				this.scrollToBottom(this.window,0);
@@ -427,7 +500,6 @@ function SipletWindow(windowName)
 		}
 	};
 	
-		
 	this.onReceive = function(e)
 	{
 		var entries = me.bin.parse(e.data);
@@ -1197,10 +1269,9 @@ function SipletWindow(windowName)
 		if(value)
 		{
 			var rescroll = this.isAtBottom(-10);
-			var span = document.createElement('span');
 			this.writeLogHtml(value);
-			span.innerHTML = value.replaceAll('\n','<BR>');
-			this.window.appendChild(span);
+			var html = value.replaceAll('\n','<BR>');
+			var span = this.flushBit(html);
 			if(rescroll)
 				this.scrollToBottom(this.window,0);
 			return span;
@@ -1601,24 +1672,14 @@ function AddNewSipletTab(url, ib)
 		ib = (getConfig('window/disableInput','')==''?true:false);
 	var windowName = 'W'+window.nextId;
 	window.nextId++;
-	var host = document.createElement('DIV');
-	window.windowArea.appendChild(host);
-	var shadow = host.attachShadow({mode: 'open'});
-	var slot = document.createElement('slot');
-	shadow.appendChild(slot);
 	var newTopElement=document.createElement('DIV');
 	var newWinContainer=document.createElement('DIV');
 	var newWindow=document.createElement('DIV');
 	newTopElement.id = windowName;
-	host.appendChild(newTopElement);
+	window.windowArea.appendChild(newTopElement);
 	newTopElement.appendChild(newWinContainer);
 	newWinContainer.appendChild(newWindow);
 	newWinContainer.style.cssText = 'position:absolute;top:0%;left:0%;width:100%;height:100%;'
-	host.style.position='absolute';
-	host.style.top = '0%';
-	host.style.height = '100%';
-	host.style.width = '100%';
-	host.style.left = '0%';
 	var siplet = new SipletWindow(windowName); // makes a deep copy
 	siplet.tab = AddNewTab();
 	siplet.tab.innerHTML = 'Connecting to ' + url + '...';
@@ -1776,7 +1837,7 @@ setTimeout(function()
 		for(var i=0;i<window.siplets.length;i++)
 		{
 			var siplet = window.siplets[i];
-			siplet.maxLines = getConfig('window/lines', '1000');
+			siplet.maxLines = getConfig('window/lines', '10000');
 			siplet.overflow = getConfig('window/overflow','WRAP');
 			siplet.fixOverflow();
 		}
