@@ -6,7 +6,8 @@ window.nextId = 0;
 var Siplet =
 {
 	VERSION_MAJOR: '3.2',
-	VERSION_MINOR: '4',
+	VERSION_MINOR: '5',
+	COFFEE_MUD: false,
 	NAME: window.isElectron?'Sip':'Siplet',
 	R: /^win\.[\w]+(\.[\w]+)*$/
 };
@@ -422,6 +423,8 @@ function SipletWindow(windowName)
 	this.flushNode = function(node, brCt)
 	{
 		var trimCount = this.maxLines / 10;
+		if(trimCount > 1000)
+			trimCount = 1000;
 		var container;
 		if((this.window.childElementCount == 0)
 		||(this.window.lastChild.brCount >= trimCount))
