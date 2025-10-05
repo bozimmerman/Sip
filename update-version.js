@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const jsPath = 'js/siplet.js';  // Adjust path if siplet.js is in a subfolder
+const jsPath = 'js/config.js';  // Adjust path if siplet.js is in a subfolder
 const pkgPath = 'package.json';
 
 const jsContent = fs.readFileSync(jsPath, 'utf8');
