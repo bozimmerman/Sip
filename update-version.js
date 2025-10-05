@@ -24,8 +24,12 @@ var variation = 'a';
 if (process.argv.length > 2)
 	variation =  process.argv[2];
 var appName = 'Sip';
+var pkgAppName = 'Sip';
 if (variation === 'b')
+{
 	appName = 'Sip of CoffeeMud';
+	pkgAppName = 'SipOfCoffeemud';
+}
 else 
 if (variation !== 'a')
 {
@@ -40,8 +44,8 @@ if(variation === 'b')
 	pkg.description = "Sip of CoffeeMud - A MUD client optimized for CoffeeMud";
 else
 	pkg.description = "Sip - A MUD Client!";
-pkg.name = appName.replace(/\s+/g, ''); // "Sip" or "SipOfCoffeemud"
-pkg.build.productName = appName.replace(/\s+/g, '');
+pkg.name = pkgAppName;
+pkg.build.productName = pkgAppName;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4) + '\n');  // Preserve formatting
 
 console.log(`Updated package.json version to ${fullVersion}`);
