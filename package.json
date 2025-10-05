@@ -1,78 +1,81 @@
 {
-  "name": "Sip",
-  "version": "3.2.0",
-  "description": "Sip: A MUD Client!",
-  "main": "main.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron .",
-    "dist:win": "node update-version.js && electron-builder --win --ia32 --x64 --publish never",
-    "dist:linux": "node update-version.js && electron-builder --linux --publish never",
-    "dist:mac": "node update-version.js && electron-builder --mac --publish never"
-  },
-  "author": {
-    "name": "Bo Zimmerman",
-    "email": "bo@zimmers.net"
-  },
-  "homepage": "http://www.coffeemud.org/",
-  "license": "Apache 2.0",
-  "keywords": [],
-  "devDependencies": {
-    "electron": "^36.3.1",
-    "electron-builder": "^26.0.19"
-   },
-  "build": {
-    "appId": "com.planet_ink.sip",
-    "productName": "Sip",
-    "files": [
-      "main.js",
-      "index.html",
-      "icon.png",
-      "dialogs/**/*",
-      "help/**/*",
-      "images/**/*",
-      "js/**/*"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "portable",
-          "arch": [
-            "ia32"
-          ]
+    "name": "Sip",
+    "version": "3.2.4",
+    "description": "Sip - A MUD Client!",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "electron .",
+        "dist:win": "node update-version.js a && electron-builder --win --ia32 --x64 --publish never",
+        "dist:linux": "node update-version.js a && electron-builder --linux --publish never",
+        "dist:mac": "node update-version.js a && electron-builder --mac --publish never",
+        "distb:win": "node update-version.js b && electron-builder --win --ia32 --x64 --publish never",
+        "distb:linux": "node update-version.js b && electron-builder --linux --publish never",
+        "distb:mac": "node update-version.js b && electron-builder --mac --publish never"
+    },
+    "author": {
+        "name": "Bo Zimmerman",
+        "email": "bo@zimmers.net"
+    },
+    "homepage": "http://www.coffeemud.org/",
+    "license": "Apache 2.0",
+    "keywords": [],
+    "devDependencies": {
+        "electron": "^36.3.1",
+        "electron-builder": "^26.0.19"
+    },
+    "build": {
+        "appId": "com.planet_ink.sip",
+        "productName": "Sip",
+        "files": [
+            "main.js",
+            "index.html",
+            "icon.png",
+            "dialogs/**/*",
+            "help/**/*",
+            "images/**/*",
+            "js/**/*"
+        ],
+        "win": {
+            "target": [
+                {
+                    "target": "portable",
+                    "arch": [
+                        "ia32"
+                    ]
+                },
+                {
+                    "target": "portable",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "icon": "icon.png",
+            "artifactName": "${productName}-${version}.${arch}.exe"
         },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
+        "mac": {
+            "target": [
+                "dmg",
+                "zip"
+            ],
+            "category": "public.app-category.utilities",
+            "artifactName": "${productName}-${version}.mac.${ext}",
+            "sign": false,
+            "gatekeeperAssess": false,
+            "hardenedRuntime": false
+        },
+        "linux": {
+            "target": [
+                "AppImage",
+                "deb",
+                "rpm"
+            ],
+            "category": "Utility",
+            "artifactName": "${productName}-${version}.linux.${ext}"
         }
-      ],
-      "icon": "icon.png",
-      "artifactName": "${productName}-${version}.${arch}.exe"
     },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.utilities",
-      "artifactName": "${productName}-${version}.mac.${ext}",
-      "sign": false,
-      "gatekeeperAssess": false,
-      "hardenedRuntime": false
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm"
-      ],
-      "category": "Utility",
-      "artifactName": "${productName}-${version}.linux.${ext}"
+    "dependencies": {
+        "@electron/remote": "^2.1.2"
     }
-  },
-  "dependencies": {
-    "@electron/remote": "^2.1.2"
-  }
 }

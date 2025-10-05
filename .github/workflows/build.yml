@@ -26,12 +26,21 @@ jobs:
           - os: ubuntu-latest
             name: linux
             build_cmd: dist:linux
+          - os: ubuntu-latest
+            name: linux
+            build_cmd: distb:linux
           - os: windows-latest
             name: windows
             build_cmd: dist:win
+          - os: windows-latest
+            name: windows
+            build_cmd: distb:win
           - os: macos-latest
             name: macos
             build_cmd: dist:mac
+          - os: macos-latest
+            name: macos
+            build_cmd: distb:mac
 
     steps:
       - name: Checkout Repository
