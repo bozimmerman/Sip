@@ -2,8 +2,8 @@ var Siplet =
 {
 	VERSION_MAJOR: '3.2',
 	VERSION_MINOR: '5',
-	COFFEE_MUD: true,
-	NAME: window.isElectron?'Sip of CoffeeMud':'Siplet',
+	COFFEE_MUD: false,
+	NAME: window.isElectron?'Sip':'Siplet',
 	R: /^win\.[\w]+(\.[\w]+)*$/
 };
 
