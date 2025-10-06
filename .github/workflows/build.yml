@@ -23,14 +23,43 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         variant: [sip, socm]
-        exclude: []  # No exclusions needed
         include:
-          - os: ${{ matrix.os }}
-            variant: ${{ matrix.variant }}
-            platform: ${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || 'macos' }}
-            build_cmd: ${{ matrix.variant == 'sip' && 'dist' || 'distb' }}:${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'win' || 'mac' }}
-            artifact_name: ${{ matrix.variant }}-${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || 'macos' }}
-            product_name: ${{ matrix.variant == 'sip' && 'Sip' || 'SipOfCoffeeMud' }}
+          - os: ubuntu-latest
+            variant: sip
+            platform: linux
+            build_cmd: dist:linux
+            artifact_name: sip-linux
+            product_name: Sip
+          - os: ubuntu-latest
+            variant: socm
+            platform: linux
+            build_cmd: distb:linux
+            artifact_name: socm-linux
+            product_name: SipOfCoffeeMud
+          - os: windows-latest
+            variant: sip
+            platform: windows
+            build_cmd: dist:win
+            artifact_name: sip-windows
+            product_name: Sip
+          - os: windows-latest
+            variant: socm
+            platform: windows
+            build_cmd: distb:win
+            artifact_name: socm-windows
+            product_name: SipOfCoffeeMud
+          - os: macos-latest
+            variant: sip
+            platform: macos
+            build_cmd: dist:mac
+            artifact_name: sip-macos
+            product_name: Sip
+          - os: macos-latest
+            variant: socm
+            platform: macos
+            build_cmd: distb:mac
+            artifact_name: socm-macos
+            product_name: SipOfCoffeeMud
 
     steps:
       - name: Checkout Repository
@@ -48,22 +77,19 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-npm-
 
-      - name: Install Dependencies with npm install
-        run: npm install
-
-      - name: Install Dependencies with npm ci
+      - name: Install Dependencies
         run: npm ci
 
       - name: Install Linux Dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2 rpm
+          sudo apt-get install -y libfuse2 rpm jq
 
       - name: Build Sip
         env:
           PRODUCT: ${{ matrix.product_name }}
-          run: |
+        run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
             VERSION=$(jq -r .version package.json)
@@ -84,7 +110,8 @@ jobs:
         shell: bash
   
       - name: Prepare Artifacts
-        PRODUCT: ${{ matrix.product_name }}
+        env:
+          PRODUCT: ${{ matrix.product_name }}
         run: |
           mkdir -p out
           export npm_package_version=$(node -p "require('./package.json').version")
