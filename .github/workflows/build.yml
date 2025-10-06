@@ -62,7 +62,8 @@ jobs:
 
       - name: Build Sip
         env:
-          PRODUCT: ${{ matrix.product_name }}        run: |
+          PRODUCT: ${{ matrix.product_name }}
+          run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
             VERSION=$(jq -r .version package.json)
@@ -83,6 +84,7 @@ jobs:
         shell: bash
   
       - name: Prepare Artifacts
+        PRODUCT: ${{ matrix.product_name }}
         run: |
           mkdir -p out
           export npm_package_version=$(node -p "require('./package.json').version")
@@ -97,7 +99,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: sip-${{ matrix.name }}
+          name: ${{ matrix.artifact_name }}
           path: out/
           retention-days: 5
 
