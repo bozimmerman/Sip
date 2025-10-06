@@ -140,7 +140,7 @@ function ConfigureTopMenu(obj)
 	ReConfigureTopMenu();
 }
 
-function DropDownMenu(e, left, top, width, fontSize, to, subMenu) 
+function DropDownMenu(e, left, top, width, fontSize, to, subMenu)
 {
 	if(subMenu === undefined)
 		ContextHideAll();
@@ -324,7 +324,7 @@ function menuScripts(value)
 	populateDivFromUrl(content, 'dialogs/scripts.htm');
 }
 
-function menuPlugins(value)
+function menuPlugins(value, page)
 {
 	var which = 'Global';
 	if((value != 'global')&&(window.currWin != null)&&(window.currWin.pb))
@@ -338,7 +338,10 @@ function menuPlugins(value)
 			window.currWin.pb.plugins = [];
 		content.plugins = JSON.parse(JSON.stringify(window.currWin.pb.plugins));
 	}
+	if(page === undefined)
 	populateDivFromUrl(content, 'dialogs/plugins.htm');
+	else
+		populateDivFromUrl(content, page);
 }
 
 function menuTimers(value)
@@ -414,8 +417,9 @@ function menuHelp(f)
 	}
 	var content = getOptionWindow("Help "+addBack+f,60,40);
 	f = 'help_' + f.toLowerCase() + '.htm';
-	populateDivFromUrl(content, 'help/'+f,function(){
-		content.lastElementChild.style.cssText = 
+	populateDivFromUrl(content, 'help/'+f,function()
+	{
+		content.lastElementChild.style.cssText =
 			"background-color:black;"
 			+"position:absolute;"
 			+"color:white;"
@@ -436,7 +440,7 @@ function menuHelp(f)
 	});
 }
 
-function MakeDraggable(div, titlebar) 
+function MakeDraggable(div, titlebar)
 {
 	var dragWidget = (titlebar === undefined)?div:titlebar;
 	dragWidget.style.cursor = 'move';
@@ -446,17 +450,19 @@ function MakeDraggable(div, titlebar)
 	let isResizing = false;
 	let startX, startY, initialLeft, initialTop, initialWidth, initialHeight;
 	var moveThreshold = 5;
-	function onMouseDown(e, chkResize) {
-		const isDraggable = e.target === div || 
-						(!e.target.onclick && 
-						 !e.target.onchange && 
-						 !e.target.oninput && 
+	function onMouseDown(e, chkResize)
+	{
+		const isDraggable = e.target === div ||
+						(!e.target.onclick &&
+						 !e.target.onchange &&
+						 !e.target.oninput &&
 						 getComputedStyle(e.target).pointerEvents !== 'none' &&
 						 !['input', 'select', 'textarea', 'button', 'a'].includes(e.target.tagName.toLowerCase()));
 		if(!isDraggable)
 			return;
-		if (e.target === div || !e.target.onclick) {
-			if (!window.currWin || !window.currWin.topWindow) 
+		if (e.target === div || !e.target.onclick)
+		{
+			if (!window.currWin || !window.currWin.topWindow)
 				return;
 			var style = getComputedStyle(div);
 			e.preventDefault();
@@ -485,18 +491,21 @@ function MakeDraggable(div, titlebar)
 		}
 	}
 
-	function onMouseMove(e) {
-		if (!window.currWin || !window.currWin.topWindow) 
+	function onMouseMove(e)
+	{
+		if ((!window.currWin) || (!window.currWin.topWindow))
 			return;
 		var dx = e.clientX - startX;
 		var dy = e.clientY - startY;
-		if (!isDragging && !isResizing && (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold)) {
+		if (!isDragging && !isResizing && (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold))
+		{
 			if(resizeClick)
 				isResizing = true;
 			else
 				isDragging = true;
 		}
-		if (isDragging) {
+		if (isDragging)
+		{
 			var rect = window.currWin.topWindow.getBoundingClientRect();
 			var width = div.offsetWidth;
 			var height = div.offsetHeight;
@@ -504,7 +513,10 @@ function MakeDraggable(div, titlebar)
 			var newY = Math.max(0, Math.min(rect.height - height, initialTop + dy));
 			div.style.left = `${newX}px`;
 			div.style.top = `${newY}px`;
-		} else if (isResizing) {
+		}
+		else
+		if (isResizing)
+		{
 			var rect = window.currWin.topWindow.getBoundingClientRect();
 			var width = div.offsetWidth;
 			var height = div.offsetHeight;
@@ -516,7 +528,8 @@ function MakeDraggable(div, titlebar)
 		}
 	}
 
-	function onMouseUp() {
+	function onMouseUp()
+	{
 		document.removeEventListener('mousemove', onMouseMove);
 		document.removeEventListener('mouseup', onMouseUp);
 		isDragging = false;
