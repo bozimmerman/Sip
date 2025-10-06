@@ -78,7 +78,7 @@ jobs:
           restore-keys: ${{ runner.os }}-npm-
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Linux Dependencies
         if: matrix.os == 'ubuntu-latest'
