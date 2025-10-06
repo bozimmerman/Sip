@@ -170,18 +170,22 @@ function FindAScript(scripts, value, ci)
 
 function LoadGlobalPhonebook()
 {
-	window.phonebook = getConfig('/phonebook/dial',[]);
-	var firstRun = window.phonebook.length == 0;
+	window.phonebook = [];
 	if(isElectron)
 	{
-		if(firstRun)
+		window.phonebook.push({
+			"name": "CoffeeMUD",
+			"host": "coffeemud.net",
+			"port": "23",
+			"user": "",
+			"account": "",
+			"password": ""
+		});
+		var savedPhonebook = getConfig('/phonebook/dial', []);
+		if(Array.isArray(savedPhonebook) && (savedPhonebook.length == 0))
 		{
-			window.phonebook.push({
-				"name": "CoffeeMUD",
-				"host": "coffeemud.net",
-				"port": "23"}
-			);
-			setConfig('/phonebook/dial', window.phonebook);
+			savedPhonebook.push(window.phonebook[0]);
+			setConfig('/phonebook/dial', savedPhonebook);
 			if(Siplet.COFFEE_MUD)
 				setConfig('/phonebook/auto','g0');
 		}
@@ -189,17 +193,10 @@ function LoadGlobalPhonebook()
 		return;
 	}
 	// NON-ELECTRON
-	if(firstRun)
-	{
-		window.phonebook.push({
-			"name": "Default MUD",
-			"port": "default"
-		});
-		setConfig('/phonebook/auto','g0');
-	}
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', '/MudPhonebook', true);
-	xhr.onreadystatechange = function() {
+	xhr.onreadystatechange = function()
+	{
 		if((xhr.readyState === 4)&&(xhr.status === 200)) 
 		{
 			var pb = JSON.parse(xhr.responseText);
@@ -208,9 +205,9 @@ function LoadGlobalPhonebook()
 				var entries = pb["phonebook"];
 				if(Array.isArray(entries) && (entries.length > 0))
 				{
-					
 					window.phonebook = entries;
-					setConfig('/phonebook/dial', window.phonebook);
+					if(getConfig('/phonebook/auto')==null)
+						setConfig('/phonebook/auto','g0');
 				}
 			}
 			AutoConnect();
