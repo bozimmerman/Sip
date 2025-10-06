@@ -22,25 +22,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        variant: [sip, socm]
+        exclude: []  # No exclusions needed
         include:
-          - os: ubuntu-latest
-            name: linux
-            build_cmd: dist:linux
-          - os: ubuntu-latest
-            name: linux
-            build_cmd: distb:linux
-          - os: windows-latest
-            name: windows
-            build_cmd: dist:win
-          - os: windows-latest
-            name: windows
-            build_cmd: distb:win
-          - os: macos-latest
-            name: macos
-            build_cmd: dist:mac
-          - os: macos-latest
-            name: macos
-            build_cmd: distb:mac
+          - os: ${{ matrix.os }}
+            variant: ${{ matrix.variant }}
+            platform: ${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || 'macos' }}
+            build_cmd: ${{ matrix.variant == 'sip' && 'dist' || 'distb' }}:${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'win' || 'mac' }}
+            artifact_name: ${{ matrix.variant }}-${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || 'macos' }}
+            product_name: ${{ matrix.variant == 'sip' && 'Sip' || 'SipOfCoffeeMud' }}
 
     steps:
       - name: Checkout Repository
@@ -71,23 +61,21 @@ jobs:
           sudo apt-get install -y libfuse2 rpm
 
       - name: Build Sip
-        run: |
+        env:
+          PRODUCT: ${{ matrix.product_name }}        run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
             VERSION=$(jq -r .version package.json)
             curl -L -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
             chmod +x appimagetool
-            mkdir Sip.AppDir
-            cp -r dist/linux-unpacked/* Sip.AppDir/
-            cd Sip.AppDir
-            ln -s Sip AppRun
-            cp ../.desktop Sip.desktop
+            mkdir $PRODUCT.AppDir
+            cp -r dist/linux-unpacked/* $PRODUCT.AppDir/
+            cd $PRODUCT.AppDir
+            ln -s $PRODUCT AppRun
+            cp ../.desktop $PRODUCT.desktop
             cp ../icon.png icon.png
             cd ..
-            ./appimagetool Sip.AppDir dist/Sip-${VERSION}.linux.AppImage
-            #curl -L -o appimage-builder.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/Continuous/appimage-builder-1.1.1.dev32+g2709a3b-x86_64.AppImage
-            #chmod +x appimage-builder.AppImage
-            #./appimage-builder.AppImage --recipe .github/workflows/AppImageBuilder.yml --skip-test
+            ./appimagetool $PRODUCT.AppDir dist/$PRODUCT-${VERSION}.linux.AppImage
             
           else
             npm run ${{ matrix.build_cmd }}
@@ -99,8 +87,8 @@ jobs:
           mkdir -p out
           export npm_package_version=$(node -p "require('./package.json').version")
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv dist/Sip-$npm_package_version.ia32.exe out/Sip-$npm_package_version.win32.exe || true
-            mv dist/Sip-$npm_package_version.x64.exe out/Sip-$npm_package_version.win64.exe || true
+            mv dist/$PRODUCT-$npm_package_version.ia32.exe out/$PRODUCT-$npm_package_version.win32.exe || true
+            mv dist/$PRODUCT-$npm_package_version.x64.exe out/$PRODUCT-$npm_package_version.win64.exe || true
           else
             mv dist/* out/
           fi
@@ -148,12 +136,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            artifacts/sip-linux/*.AppImage
-            artifacts/sip-linux/*.deb
-            artifacts/sip-linux/*.rpm
-            artifacts/sip-windows/*.exe
-            artifacts/sip-macos/*.dmg
-            artifacts/sip-macos/*.zip
+            artifacts/*/*.AppImage
+            artifacts/*/*.deb
+            artifacts/*/*.rpm
+            artifacts/*/*.exe
+            artifacts/*/*.dmg
+            artifacts/*/*.zip
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: Sip ${{ github.event.inputs.tag || github.ref_name }}
           body: "Automated Sip release for ${{ github.event.inputs.tag || github.ref_name }} - A MUD Client!"
