@@ -1,7 +1,7 @@
 {
-    "name": "SipOfCoffeemud",
+    "name": "Sip",
     "version": "3.2.5",
-    "description": "Sip of CoffeeMud - A MUD client optimized for CoffeeMud",
+    "description": "Sip - A MUD Client!",
     "main": "main.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
@@ -26,7 +26,7 @@
     },
     "build": {
         "appId": "com.planet_ink.sip",
-        "productName": "SipOfCoffeemud",
+        "productName": "Sip",
         "files": [
             "main.js",
             "index.html",
