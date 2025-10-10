@@ -23,7 +23,7 @@ const fullVersion = `${major}.${minor}`;  // Outputs "3.2.1" based on your examp
 var variation = 'a';
 if (process.argv.length > 2)
 	variation =  process.argv[2];
-var appName = 'Sip';
+var appName = 'Sip MUD Client';
 var pkgAppName = 'Sip';
 if (variation === 'b')
 {
@@ -45,7 +45,7 @@ if(variation === 'b')
 else
 	pkg.description = "Sip - A MUD Client!";
 pkg.name = pkgAppName;
-pkg.build.productName = pkgAppName;
+pkg.build.productName = appName;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4) + '\n');  // Preserve formatting
 
 console.log(`Updated package.json version to ${fullVersion}`);
@@ -59,5 +59,5 @@ var newJsContent = jsContent.replace(nameRegex, "NAME: window.isElectron?'"+appN
 const cmRegex = /COFFEE_MUD:\s*(true|false),/;
 newJsContent = newJsContent.replace(cmRegex, `COFFEE_MUD: ${variation === 'b' ? 'true' : 'false'},`);
 fs.writeFileSync(jsPath, newJsContent);
-console.log(`Updated Siplet.NAME to '${variation === 'a' ? 'Sip' : 'Sip of CoffeeMud'}'`);
+console.log(`Updated Siplet.NAME to '${appName}'`);
 

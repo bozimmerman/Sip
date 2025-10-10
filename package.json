@@ -26,7 +26,7 @@
     },
     "build": {
         "appId": "com.planet_ink.sip",
-        "productName": "Sip",
+        "productName": "Sip MUD Client",
         "files": [
             "main.js",
             "index.html",
@@ -52,7 +52,7 @@
                 }
             ],
             "icon": "icon.png",
-            "artifactName": "${productName}-${version}.${arch}.exe"
+            "artifactName": "${name}-${version}.${arch}.exe"
         },
         "mac": {
             "target": [
@@ -60,7 +60,7 @@
                 "zip"
             ],
             "category": "public.app-category.utilities",
-            "artifactName": "${productName}-${version}.mac.${ext}",
+            "artifactName": "${name}-${version}.mac.${ext}",
             "sign": false,
             "gatekeeperAssess": false,
             "hardenedRuntime": false
@@ -72,7 +72,7 @@
                 "rpm"
             ],
             "category": "Utility",
-            "artifactName": "${productName}-${version}.linux.${ext}"
+            "artifactName": "${name}-${version}.linux.${ext}"
         }
     },
     "dependencies": {

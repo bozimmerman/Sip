@@ -1,4 +1,4 @@
-var MXPBIT =
+var MXPBIT = 
 {
 	OPEN: 1,
 	COMMAND: 2,
@@ -11,7 +11,7 @@ var MXPBIT =
 	NOOVERRIDE: 256
 };
 
-var MXPMODE =
+var MXPMODE = 
 {
 	LINE_OPEN: 0,
 	LINE_SECURE: 1,
@@ -45,11 +45,11 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 	this.attributeValues = null;
 	this.alternativeAttributes	= null;
 	this.text = null;
-
-	if (((this.bitmap & MXPBIT.COMMAND)==0)
+	
+	if (((this.bitmap & MXPBIT.COMMAND)==0) 
 	&& (theDefinition.toUpperCase().indexOf("&TEXT;") >= 0))
 		this.bitmap = this.bitmap | MXPBIT.NEEDTEXT;
-	if((this.flag != null) && (this.flag.length > 0))
+	if((this.flag != null) && (this.flag.length > 0)) 
 		this.bitmap = this.bitmap | MXPBIT.NEEDTEXT;
 
 	this.sameAs = function(x)
@@ -60,8 +60,8 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 			&& this.flag == x.flag
 			&& this.bitmap == x.bitmap;
 	}
-
-	this.copyOf = function()
+	
+	this.copyOf = function() 
 	{
 		var E= new MXPElement(this.name, this.definition, this.attributes, this.flag, this.bitmap,this.unsupported);
 		if(this.parsedAttributes != null)
@@ -74,7 +74,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 			E.alternativeAttributes = JSON.parse(JSON.stringify(this.alternativeAttributes));
 		return E;
 	};
-
+	
 	this.getAttributeValue = function(tag)
 	{
 		tag = tag.toUpperCase().trim();
@@ -143,7 +143,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 					bit += buf[i];
 				else
 				if ((lastC == '=')
-				|| (quotes != '\0')
+				|| (quotes != '\0') 
 				|| ((quotes == '\0') && ((lastC == ' ') || (lastC == '\t'))))
 				{
 					if ((quotes != '\0') && (quotes == buf[i]))
@@ -179,7 +179,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 			var VAL = this.attributeValues[PA];
 			if ((VAL != null) && In(VAL, this.parsedAttributes))
 			{
-
+				
 				this.parsedAttributes.splice(p,1);
 				delete this.attributeValues[PA];
 				this.alternativeAttributes[PA] = VAL;
@@ -187,7 +187,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 		}
 		return this.parsedAttributes;
 	};
-
+	
 	this.getCloseTags = function(desc)
 	{
 		var buf = desc;
@@ -243,7 +243,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 		}
 		return tags;
 	};
-
+	
 	/**
 	 * Does 2 things:
 	 * 1. Parses user attributes into tag attributes.
@@ -265,7 +265,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 			{
 				userParm = this.userParms[u].toUpperCase().trim();
 				var xx = userParm.indexOf('=');
-				if ((xx > 0)
+				if ((xx > 0) 
 				&& (userParm.substr(0, xx).trim() in this.alternativeAttributes))
 				{
 					var newKey = this.alternativeAttributes[userParm.substr(0, xx).trim()];
@@ -289,7 +289,7 @@ var MXPElement = function(theName, theDefinition, theAttributes, theFlag, theBit
 							{
 								if (attribName in this.attributeValues)
 									delete this.attributeValues[attribName];
-								this.attributeValues[attribName] = (userParm == attribName)
+								this.attributeValues[attribName] = (userParm == attribName) 
 									? "" : this.userParms[u].trim().substr(attribName.length + 1);
 							}
 							break;
@@ -338,50 +338,50 @@ window.defElements = {
 	"COLOR": new MXPElement("COLOR", "<FONT COLOR=&fore; BACK=&back;>", "FORE BACK", "", 0),
 	"HIGH": new MXPElement("HIGH", "", "", "", MXPBIT.NOTSUPPORTED),
 	"H": new MXPElement("H", "", "", "", MXPBIT.NOTSUPPORTED),
-	"FONT": new MXPElement("FONT", "<FONT STYLE=\"color: &color;;background-color: &back;;font-family: &face;;font-size: &size;;\">",
+	"FONT": new MXPElement("FONT", "<FONT STYLE=\"color: &color;;background-color: &back;;font-family: &face;;font-size: &size;;\">", 
 			"FACE SIZE COLOR BACK STYLE", "", MXPBIT.SPECIAL|MXPBIT.HTML),
 	"NOBR": new MXPElement("NOBR", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"A": new MXPElement("A", "<A NAME=\"&name;\" STYLE=\"&lcc;\" ONMOUSEOVER=\"&onmouseover;\" ONCLICK=\"&onclick;\" HREF=\"&href;\" TITLE=\"&hint;\">",
 			"HREF HINT NAME TITLE=HINT STYLE ONMOUSEOUT ONMOUSEOVER ONCLICK", "", MXPBIT.HTML|MXPBIT.SPECIAL, ""),
-	"SEND": new MXPElement("SEND", "<A NAME=\"&expire;\" STYLE=\"&lcc;\" HREF=\"&href;\" ONMOUSEOUT=\"ContextDelayHide();\" ONCLICK=\"&onclick;\" TITLE=\"&hint;\">",
+	"SEND": new MXPElement("SEND", "<A NAME=\"&expire;\" STYLE=\"&lcc;\" HREF=\"&href;\" ONMOUSEOUT=\"ContextDelayHide();\" ONCLICK=\"&onclick;\" TITLE=\"&hint;\">", 
 			"HREF HINT PROMPT EXPIRE STYLE", "", MXPBIT.SPECIAL, ""), // special done
 	"EXPIRE": new MXPElement("EXPIRE", "", "NAME", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"VERSION": new MXPElement("VERSION", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"SUPPORT": new MXPElement("SUPPORT", "", "", "", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"GAUGE": new MXPElement("GAUGE", "", "ENTITY MAX CAPTION COLOR", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"STAT": new MXPElement("STAT", "", "ENTITY MAX CAPTION", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
-	"FRAME": new MXPElement("FRAME", "", "NAME ACTION TITLE INTERNAL ALIGN LEFT TOP WIDTH HEIGHT SCROLLING FLOATING IMAGE IMGOP",
+	"FRAME": new MXPElement("FRAME", "", "NAME ACTION TITLE INTERNAL ALIGN LEFT TOP WIDTH HEIGHT SCROLLING FLOATING IMAGE IMGOP", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"DEST": new MXPElement("DEST", "", "NAME EOF", "", MXPBIT.SPECIAL),
 	"DESTINATION": new MXPElement("DESTINATION", "", "NAME EOF", "", MXPBIT.SPECIAL),
 	"RELOCATE": new MXPElement("RELOCATE", "", "URL PORT QUIET", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"USER": new MXPElement("USER", "", "", "", MXPBIT.COMMAND | MXPBIT.SPECIAL),
 	"PASSWORD": new MXPElement("PASSWORD", "", "", "", MXPBIT.COMMAND | MXPBIT.SPECIAL),
-	"IMAGE": new MXPElement("IMAGE", "<IMG SRC=\"&url;&fname;\" HEIGHT=&h; WIDTH=&w; ALIGN=&align;>",
+	"IMAGE": new MXPElement("IMAGE", "<IMG SRC=\"&url;&fname;\" HEIGHT=&h; WIDTH=&w; ALIGN=&align;>", 
 			"FNAME URL T H W HSPACE VSPACE ALIGN ISMAP", "", MXPBIT.COMMAND, "HSPACE VSPACE ISMAP"),
-	"IMG": new MXPElement("IMG", "<IMG SRC=\"&src;\" HEIGHT=&height; WIDTH=&width; ALIGN=&align; STYLE=&style;>",
+	"IMG": new MXPElement("IMG", "<IMG SRC=\"&src;\" HEIGHT=&height; WIDTH=&width; ALIGN=&align; STYLE=&style;>", 
 			"SRC HEIGHT=70 WIDTH=70 ALIGN STYLE", "", MXPBIT.COMMAND),
 	"FILTER": new MXPElement("FILTER", "", "SRC DEST NAME", "", MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
 	"SCRIPT": new MXPElement("SCRIPT", "", "", "", MXPBIT.COMMAND | MXPBIT.NOTSUPPORTED),
-	"ENTITY": new MXPElement("ENTITY", "", "NAME VALUE DESC PRIVATE PUBLISH DELETE ADD",
+	"ENTITY": new MXPElement("ENTITY", "", "NAME VALUE DESC PRIVATE PUBLISH DELETE ADD", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND, "PRIVATE PUBLISH ADD"), // special
-	"EN": new MXPElement("EN", "", "NAME VALUE DESC PRIVATE PUBLISH DELETE ADD",
+	"EN": new MXPElement("EN", "", "NAME VALUE DESC PRIVATE PUBLISH DELETE ADD", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND, "PRIVATE PUBLISH ADD"), // special
-	"TAG": new MXPElement("TAG", "", "INDEX WINDOWNAME FORE BACK GAG ENABLE DISABLE",
+	"TAG": new MXPElement("TAG", "", "INDEX WINDOWNAME FORE BACK GAG ENABLE DISABLE", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND, "WINDOWNAME"),
-	"VAR": new MXPElement("VAR", "", "NAME DESC PRIVATE PUBLISH DELETE ADD REMOVE",
+	"VAR": new MXPElement("VAR", "", "NAME DESC PRIVATE PUBLISH DELETE ADD REMOVE", 
 			"", MXPBIT.SPECIAL, "PRIVATE PUBLISH ADD REMOVE"), // special
-	"V": new MXPElement("V", "", "NAME DESC PRIVATE PUBLISH DELETE ADD REMOVE",
+	"V": new MXPElement("V", "", "NAME DESC PRIVATE PUBLISH DELETE ADD REMOVE", 
 			"", MXPBIT.SPECIAL, "PRIVATE PUBLISH ADD REMOVE"), // special
-	"ELEMENT": new MXPElement("ELEMENT", "", "NAME DEFINITION ATT TAG FLAG OPEN DELETE EMPTY",
+	"ELEMENT": new MXPElement("ELEMENT", "", "NAME DEFINITION ATT TAG FLAG OPEN DELETE EMPTY", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
-	"EL": new MXPElement("EL", "", "NAME DEFINITION ATT TAG FLAG OPEN DELETE EMPTY",
+	"EL": new MXPElement("EL", "", "NAME DEFINITION ATT TAG FLAG OPEN DELETE EMPTY", 
 			"", MXPBIT.SPECIAL | MXPBIT.COMMAND), // special
 	"ATTLIST": new MXPElement("ATTLIST", "", "NAME ATT", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"AT": new MXPElement("AT", "", "NAME ATT", "", MXPBIT.SPECIAL | MXPBIT.COMMAND),
 	"SOUND": new MXPElement("SOUND", "", "FNAME V=100 L=1 P=50 T U", "", MXPBIT.COMMAND|MXPBIT.SPECIAL),
 	"MUSIC": new MXPElement("MUSIC", "", "FNAME V=100 L=1 P=50 T U", "", MXPBIT.COMMAND|MXPBIT.SPECIAL),
-	"INPUT": new MXPElement("INPUT", "<INPUT NAME=&name; &checked; TYPE=&type; value=\"&value;\" onchange=\"SipWin(this).setEntity('&name;',this.value);SipWin(this).dispatchEvent('&name;');\" onclick=\"SipWin(this).dispatchEvent('&name;');\">",
+	"INPUT": new MXPElement("INPUT", "<INPUT NAME=&name; &checked; TYPE=&type; value=\"&value;\" onchange=\"SipWin(this).setEntity('&name;',this.value);SipWin(this).dispatchEvent('&name;');\" onclick=\"SipWin(this).dispatchEvent('&name;');\">", 
 		"NAME TYPE VALUE CHECKED", "", MXPBIT.COMMAND)
 	// -------------------------------------------------------------------------
 };
@@ -425,11 +425,11 @@ var MXP = function(sipwin)
 			return '';
 		// set resume parsing markers
 		if(s[0]=='&')
-			return '&amp;\0'+s.substr(1);
+			return '&amp;\0'+s.substr(1); 
 		else
 			return '&lt;\0'+s.substr(1);
 	};
-
+	
 	this.flush = function() {
 		var s = this.partial;
 		this.partial = null;
@@ -552,8 +552,8 @@ var MXP = function(sipwin)
 						return this.cancelProcessing();
 				}
 				else
-				if ((this.partLastC == '=')
-				|| (this.partQuote != '\0')
+				if ((this.partLastC == '=') 
+				|| (this.partQuote != '\0') 
 				|| ((this.partQuote == '\0') && ((this.partLastC == ' ') || (this.partLastC == '\t'))))
 				{
 					if ((this.partQuote != '\0') && (this.partQuote == c))
@@ -623,8 +623,8 @@ var MXP = function(sipwin)
 					return this.cancelProcessing();
 				break;
 			default:
-				if ((this.partQuote != '\0')
-				|| (isLetter(c))
+				if ((this.partQuote != '\0') 
+				|| (isLetter(c)) 
 				|| (this.partialBit.length > 0)
 				|| ((this.parts.length > 0) && (this.parts[0] in this.elements)))
 					this.partialBit += c;
@@ -648,7 +648,7 @@ var MXP = function(sipwin)
 				var E = this.openElements[i];
 				if(E == this.textProcessor)
 					break;
-				if ((E.bitmap & MXPBIT.NEEDTEXT)==MXPBIT.NEEDTEXT)
+				if ((E.bitmap & MXPBIT.NEEDTEXT)==MXPBIT.NEEDTEXT) 
 					nextProcessor = E;
 			}
 			this.textProcessor = nextProcessor;
@@ -688,7 +688,7 @@ var MXP = function(sipwin)
 			if (code < 100)
 			{
 				var tag = this.tags[code];
-				if ((tag != null)
+				if ((tag != null) 
 				&& ((tag.bitmap & MXPBIT.DISABLED)==0))
 				{
 					if ((tag.bitmap & MXPBIT.EATTEXT)==MXPBIT.EATTEXT)
@@ -763,9 +763,9 @@ var MXP = function(sipwin)
 			// anyway...
 			if((E.bitmap & MXPBIT.NEEDTEXT)==MXPBIT.NEEDTEXT)
 				text = E.text;
-			if ((E.bitmap & MXPBIT.HTML)==MXPBIT.HTML)
+			if ((E.bitmap & MXPBIT.HTML)==MXPBIT.HTML) 
 			{
-				if ((E.bitmap & MXPBIT.SPECIAL)==MXPBIT.SPECIAL)
+				if ((E.bitmap & MXPBIT.SPECIAL)==MXPBIT.SPECIAL) 
 					this.doSpecialProcessing(E, true);
 				if(this.debug)
 					console.log('mxpr:' + oldString);
@@ -795,7 +795,7 @@ var MXP = function(sipwin)
 				E.lastForeground = sipwin.ansi.foreground;
 				E.rawText = oldString;
 				this.openElements.push(E);
-				if ((E.bitmap & MXPBIT.NEEDTEXT)==MXPBIT.NEEDTEXT)
+				if ((E.bitmap & MXPBIT.NEEDTEXT)==MXPBIT.NEEDTEXT) 
 				{
 					this.textProcessor = E;
 					E.text = '';
@@ -805,9 +805,9 @@ var MXP = function(sipwin)
 				}
 			}
 		}
-
+		
 		var definition = E.getFoldedDefinition(this.stripBadHTMLTags(text.replaceAll("&nbsp;", " ")));
-		if ((endTag || selfCloser)
+		if ((endTag || selfCloser) 
 		&& ((E.bitmap & MXPBIT.COMMAND)==0)
 		&& (E.flag != null)
 		&& (E.flag.length > 0))
@@ -818,7 +818,7 @@ var MXP = function(sipwin)
 			this.modifyEntity(f, text);
 		}
 
-		if ((E.bitmap & MXPBIT.SPECIAL)==MXPBIT.SPECIAL)
+		if ((E.bitmap & MXPBIT.SPECIAL)==MXPBIT.SPECIAL) 
 			this.doSpecialProcessing(E, endTag || selfCloser);
 
 		definition = this.processAnyEntities(definition, E);
@@ -919,8 +919,8 @@ var MXP = function(sipwin)
 				var convertIt = false;
 				var oldI = i;
 				var content = '';
-				if ((i < buf.length - 3)
-				&& (buf[i + 1] == '#')
+				if ((i < buf.length - 3) 
+				&& (buf[i + 1] == '#') 
 				&& (isDigit(buf[i + 2])))
 				{
 					i++; // skip to the hash, the next line will skip to the digit
@@ -983,7 +983,7 @@ var MXP = function(sipwin)
 				i = oldI;
 				if (val != null)
 				{
-					if ((currentElement != null)
+					if ((currentElement != null) 
 					&& (currentElement.name.toUpperCase() == "FONT"))
 					{
 						if (tag.toUpperCase() == "COLOR")
@@ -993,7 +993,7 @@ var MXP = function(sipwin)
 							sipwin.ansi.setColors(null, val);
 					}
 					buf = buf.substr(0,oldI) + val + buf.substr(oldI);
-					if ((val.toUpperCase()== oldValue.toUpperCase())
+					if ((val.toUpperCase()== oldValue.toUpperCase()) 
 					|| (currentElement != null))
 						i += val.length;
 				}
@@ -1024,10 +1024,10 @@ var MXP = function(sipwin)
 			case '>':
 				if (bit != null)
 					lastTag = bit;
-				if ((quotes.length == 0)
-				&& (start >= 0)
-				&& (i - start > 0)
-				&& (lastTag != null)
+				if ((quotes.length == 0) 
+				&& (start >= 0) 
+				&& (i - start > 0) 
+				&& (lastTag != null) 
 				&& (lastTag.trim().toUpperCase() == "FONT"))
 				{
 					var distance = (i - start) + 1;
@@ -1049,7 +1049,7 @@ var MXP = function(sipwin)
 			case '\'':
 				if (start < 0)
 					break;
-				if ((quotes.length > 0)
+				if ((quotes.length > 0) 
 				&& (quotes[quotes.length-1] == buf[i]))
 					quotes.splice(quotes.length - 1);
 				else
@@ -1105,7 +1105,7 @@ var MXP = function(sipwin)
 			sipwin.modifyGauges();
 		}
 	};
-
+	
 	this.getEntityValue = function(tag, E)
 	{
 		var val = null;
@@ -1135,7 +1135,7 @@ var MXP = function(sipwin)
 		}
 		return val;
 	};
-
+	
 	this.processEntity = function(tag, currentE)
 	{
 		var old = this.partial;
@@ -1161,16 +1161,16 @@ var MXP = function(sipwin)
 	this.getFrameMap = function()
 	{
 		var framechoices = Object.assign({}, this.frames);
-		if(this.dests.length == 1)
+		if(this.dests.length == 1) 
 			framechoices['_previous'] = sipwin.topContainer.firstChild;
 		else
-		if(this.dests.length > 1)
+		if(this.dests.length > 1) 
 			framechoices['_previous'] = this.dests[this.dests.length-2];
 		if(sipwin.topContainer)
 			framechoices['_top'] = sipwin.topContainer.firstChild;
 		return framechoices;
 	};
-
+	
 	this.doSpecialProcessing = function(E, isEndTag)
 	{
 		var tagName = E.name.toUpperCase();
@@ -1181,7 +1181,7 @@ var MXP = function(sipwin)
 			var back = E.getAttributeValue("BACK");
 			var face = E.getAttributeValue("FACE");
 			var size = E.getAttributeValue("SIZE");
-			if ((style != null)
+			if ((style != null) 
 			&& (color == null) && (back == null) && (face == null) && (size == null))
 			{
 				var s = null;
@@ -1491,7 +1491,7 @@ var MXP = function(sipwin)
 				}
 				var x = getPixels(s);
 				var y = getPixels(curr);
-				if((x == null)||(y==null))
+				if((x == null)||(y==null)) 
 					return;
 				return Math.round(Math.ceil(x / y * 100.0)) + '%';
 			};
@@ -1551,7 +1551,7 @@ var MXP = function(sipwin)
 						case 0: // scooch all left
 							for(var i=peerDex+1;i<peerFrames.length;i++)
 							{
-								var tmp = peerFrames[i].style.left;
+								var tmp = peerFrames[i].style.left; 
 								peerFrames[i].style.left = fleft;
 								fleft = tmp;
 							}
@@ -1561,7 +1561,7 @@ var MXP = function(sipwin)
 						case 1: //right
 							for(var i=peerDex+1;i<peerFrames.length-1;i++)
 							{
-								var tmp = peerFrames[i].style.left;
+								var tmp = peerFrames[i].style.left; 
 								peerFrames[i].style.left = fleft;
 								fleft = tmp;
 							}
@@ -1571,7 +1571,7 @@ var MXP = function(sipwin)
 						case 2: // top
 							for(var i=peerDex+1;i<peerFrames.length;i++)
 							{
-								var tmp = peerFrames[i].style.top;
+								var tmp = peerFrames[i].style.top; 
 								peerFrames[i].style.top = ftop;
 								ftop = tmp;
 							}
@@ -1581,7 +1581,7 @@ var MXP = function(sipwin)
 						case 3: //bottom
 							for(var i=peerDex+1;i<peerFrames.length-1;i++)
 							{
-								var tmp = peerFrames[i].style.top;
+								var tmp = peerFrames[i].style.top; 
 								peerFrames[i].style.top = ftop;
 								ftop = tmp;
 							}
@@ -1638,9 +1638,9 @@ var MXP = function(sipwin)
 					"action": action,
 					"title": title,
 					"internal": internal,
-					"align": align,
-					"left": left,
-					"top": top,
+					"align": align, 
+					"left": left, 
+					"top": top, 
 					"width": width,
 					"height": height,
 					"scrolling": scrolling,
@@ -1917,7 +1917,7 @@ var MXP = function(sipwin)
 		else
 		if (tagName == "VERSION")
 		{
-			sipwin.wsocket.send("\x1b[1z<VERSION MXP=1.0 STYLE=1.0 CLIENT=Siplet VERSION="
+			sipwin.wsocket.send("\x1b[1z<VERSION MXP=1.0 STYLE=1.0 CLIENT=Siplet VERSION=" 
 				+ sipwin.siplet.VERSION_MAJOR + " REGISTERED=NO>\n");
 		}
 		else
@@ -2095,7 +2095,7 @@ var MXP = function(sipwin)
 						parm = request.substr(x + 1).trim();
 					}
 					var elem = this.elements[tag];
-					if ((elem == null)
+					if ((elem == null) 
 					|| ((elem.bitmap & MXPBIT.NOTSUPPORTED) == MXPBIT.NOTSUPPORTED))
 					{
 						if ((parm.length > 0) && (parm != "*"))
@@ -2180,7 +2180,7 @@ var MXP = function(sipwin)
 			return;
 		}
 	};
-
+	
 	this.executeMode = function()
 	{
 		switch (this.mode)
@@ -2197,7 +2197,7 @@ var MXP = function(sipwin)
 		}
 		return '';
 	};
-
+	
 	this.eolDetected = function()
 	{
 		if(!this.active())
