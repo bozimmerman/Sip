@@ -140,7 +140,7 @@ function ConfigureTopMenu(obj)
 	ReConfigureTopMenu();
 }
 
-function DropDownMenu(e, left, top, width, fontSize, to, subMenu)
+function DropDownMenu(e, left, top, width, fontSize, to, subMenu) 
 {
 	if(subMenu === undefined)
 		ContextHideAll();
@@ -339,7 +339,7 @@ function menuPlugins(value, page)
 		content.plugins = JSON.parse(JSON.stringify(window.currWin.pb.plugins));
 	}
 	if(page === undefined)
-	populateDivFromUrl(content, 'dialogs/plugins.htm');
+		populateDivFromUrl(content, 'dialogs/plugins.htm');
 	else
 		populateDivFromUrl(content, page);
 }
@@ -419,7 +419,7 @@ function menuHelp(f)
 	f = 'help_' + f.toLowerCase() + '.htm';
 	populateDivFromUrl(content, 'help/'+f,function()
 	{
-		content.lastElementChild.style.cssText =
+		content.lastElementChild.style.cssText = 
 			"background-color:black;"
 			+"position:absolute;"
 			+"color:white;"
@@ -440,7 +440,7 @@ function menuHelp(f)
 	});
 }
 
-function MakeDraggable(div, titlebar)
+function MakeDraggable(div, titlebar) 
 {
 	var dragWidget = (titlebar === undefined)?div:titlebar;
 	dragWidget.style.cursor = 'move';
@@ -452,17 +452,17 @@ function MakeDraggable(div, titlebar)
 	var moveThreshold = 5;
 	function onMouseDown(e, chkResize)
 	{
-		const isDraggable = e.target === div ||
-						(!e.target.onclick &&
-						 !e.target.onchange &&
-						 !e.target.oninput &&
+		const isDraggable = e.target === div || 
+						(!e.target.onclick && 
+						 !e.target.onchange && 
+						 !e.target.oninput && 
 						 getComputedStyle(e.target).pointerEvents !== 'none' &&
 						 !['input', 'select', 'textarea', 'button', 'a'].includes(e.target.tagName.toLowerCase()));
 		if(!isDraggable)
 			return;
 		if (e.target === div || !e.target.onclick)
 		{
-			if (!window.currWin || !window.currWin.topWindow)
+			if (!window.currWin || !window.currWin.topWindow) 
 				return;
 			var style = getComputedStyle(div);
 			e.preventDefault();
