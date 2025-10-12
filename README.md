@@ -31,6 +31,15 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
  - Sip-3.2.6.win64.exe (Windows 10 64-bit)
  - Sip-3.2.6.win32.exe (Windows 10 32-bit)
 
+## Binaries
+ - Sip-3.2.6.linux.AppImage (Linux Ubuntu 18.04+, Debian 10+, Fedora 32+, or equivalents)
+ - Sip-3.2.6.linux.deb  (Debian-based Linux Ubuntu 18.04+, Debian 10+, or Mint 19+, 64-bit)
+ - Sip-3.2.6.linux.rpm  (RPM-based Linux Fedora 32+, CentOS 8+, or openSUSE Leap 15.2+, 64-bit)
+ - Sip-3.2.6.mac.dmg (macOS 10.15+ x64 and arm64)
+ - Sip-3.2.6.mac.zip (macOS 10.15+ x64 and arm64)
+ - Sip-3.2.6.win64.exe (Windows 10 64-bit)
+ - Sip-3.2.6.win32.exe (Windows 10 32-bit)
+
 ## Installation
 
 1. **Download the Executable**:
