@@ -1463,55 +1463,32 @@ var MXP = function(sipwin)
 		else
 		if (tagName=="FRAME")
 		{
-			var getPixels = function(s)
+			var addDim = function(a, b) 
 			{
-				if(s==null || (s==undefined))
-					return null;
-				if(typeof s === 'number')
-					return s;
-				if(isNumber(s))
-					return Number(s);
-				else
-				if(s.endsWith("px"))
-					return Number(s.substr(0,s.length-2));
-				else
-					return null;
+				if (a === '0' || a === '0px' || a === '0%') 
+					return b;
+				if (b === '0' || b === '0px' || b === '0%') 
+					return a;
+				return `calc(${a} + ${b})`;
 			};
-			var fixISize = function(s,curr)
+			var subDim = function(a, b) 
 			{
-				if((s==null)||(s==undefined)||(!curr))
-					return null;
-				if(typeof s === 'number')
-					s = ''+s;
-				else
-				{
-					s=s.trim();
-					if(s.endsWith('%'))
-						return s;
-				}
-				var x = getPixels(s);
-				var y = getPixels(curr);
-				if((x == null)||(y==null)) 
-					return;
-				return Math.round(Math.ceil(x / y * 100.0)) + '%';
+				if (b === '0' || b === '0px' || b === '0%') 
+					return a;
+				if (a === '0' || a === '0px' || a === '0%') 
+					return `calc(0 - ${b})`;
+				return `calc(${a} - ${b})`;
 			};
-			var dePct = function(s)
-			{
-				if(s==null || (s==undefined))
-					return null;
-				if(s.endsWith('%'))
-					return Number(s.substr(0,s.length-1));
-				return getPixels(s);
-			};
+			
 			var name = E.getAttributeValue("NAME");
 			var action = E.getAttributeValue("ACTION"); // open,close,redirect
 			if(action == null)
 				action = '';
 			var title = E.getAttributeValue("TITLE");
 			var internal = E.getAttributeValue("INTERNAL");
-			var align = E.getAttributeValue("ALIGN"); // internal only: left,right,bottom,top
-			var left = E.getAttributeValue("LEFT"); // ignored if internal is specified
-			var top = E.getAttributeValue("TOP"); // ignored if internal is specified
+			var align = E.getAttributeValue("ALIGN"); // internal only: left,right,bottom,top 
+			var left = E.getAttributeValue("LEFT"); // ignored if internal is specified 
+			var top = E.getAttributeValue("TOP"); // ignored if internal is specified 
 			var width = E.getAttributeValue("WIDTH");
 			var height = E.getAttributeValue("HEIGHT");
 			var scrolling = E.getAttributeValue("SCROLLING");
@@ -1530,6 +1507,7 @@ var MXP = function(sipwin)
 					if(sprops.internal != null)
 					{
 						var parentFrame = frame.parentNode;
+						// the privilegedFrame is ALWAYS the first child in a container.  This is correct!
 						var privilegedFrame = parentFrame.childNodes[0];
 						var peerFrames = [];
 						for(var i=2;i<parentFrame.childNodes.length;i++)
@@ -1546,47 +1524,41 @@ var MXP = function(sipwin)
 						var alignx = (sprops.align)?aligns.indexOf(sprops.align.toUpperCase().trim()):-1;
 						var fleft = frame.style.left;
 						var ftop = frame.style.top;
+						var shiftw = sprops.width;
+						var shifth = sprops.height;
 						switch(alignx)
 						{
 						case 0: // scooch all left
 							for(var i=peerDex+1;i<peerFrames.length;i++)
 							{
 								var tmp = peerFrames[i].style.left; 
-								peerFrames[i].style.left = fleft;
-								fleft = tmp;
+								peerFrames[i].style.left = subDim(tmp, shiftw);
 							}
-							privilegedFrame.style.width = (dePct(privilegedFrame.style.width)
-														+ dePct(frame.sprops.pctwidth))+'%';
+							privilegedFrame.style.width = addDim(privilegedFrame.style.width, shiftw);
 							break;
 						case 1: //right
 							for(var i=peerDex+1;i<peerFrames.length-1;i++)
 							{
 								var tmp = peerFrames[i].style.left; 
-								peerFrames[i].style.left = fleft;
-								fleft = tmp;
+								peerFrames[i].style.left = addDim(tmp, shiftw);
 							}
-							privilegedFrame.style.width = (dePct(privilegedFrame.style.width)
-														+ dePct(frame.sprops.pctwidth))+'%';
+							privilegedFrame.style.width = addDim(privilegedFrame.style.width, shiftw);
 							break;
 						case 2: // top
 							for(var i=peerDex+1;i<peerFrames.length;i++)
 							{
 								var tmp = peerFrames[i].style.top; 
-								peerFrames[i].style.top = ftop;
-								ftop = tmp;
+								peerFrames[i].style.top = subDim(tmp, shifth);
 							}
-							privilegedFrame.style.height = (dePct(privilegedFrame.style.height)
-														+ dePct(frame.sprops.pctheight))+'%';
+							privilegedFrame.style.height = addDim(privilegedFrame.style.height, shifth);
 							break;
 						case 3: //bottom
 							for(var i=peerDex+1;i<peerFrames.length-1;i++)
 							{
 								var tmp = peerFrames[i].style.top; 
-								peerFrames[i].style.top = ftop;
-								ftop = tmp;
+								peerFrames[i].style.top = addDim(tmp, shifth);
 							}
-							privilegedFrame.style.height = (dePct(privilegedFrame.style.height)
-														+ dePct(frame.sprops.pctheight))+'%';
+							privilegedFrame.style.height = addDim(privilegedFrame.style.height, shifth);
 							break;
 						}
 						for(var k in this.frames)
@@ -1620,9 +1592,12 @@ var MXP = function(sipwin)
 					if(s==null || (s==undefined))
 						return null;
 					if(typeof s === 'number')
-						return s;
+						return s + 'px'; // Changed: Append 'px' if plain number
+					s = s.trim();
 					if((s.length>1)&&(s.endsWith("c"))&&(isDigit(s[0])))
 						return (Number(s.substr(0,s.length-1))*16)+'px';
+					if (!s.endsWith('%') && !s.endsWith('px') && !isNaN(parseFloat(s)))
+						return s + 'px';
 					return s;
 				};
 				if(width == null)
@@ -1641,8 +1616,8 @@ var MXP = function(sipwin)
 					"align": align, 
 					"left": left, 
 					"top": top, 
-					"width": width,
-					"height": height,
+					"width": width, // Changed: Store string with unit (renamed from pctwidth)
+					"height": height, // Changed: Store string with unit (renamed from pctheight)
 					"scrolling": scrolling,
 					"floating": floating
 				};
@@ -1665,10 +1640,9 @@ var MXP = function(sipwin)
 						var siblingDiv = sipwin.window;
 						var containerDiv = sipwin.window.parentNode; // has the titlebar in it and window and so forth
 						var calced = getComputedStyle(sipwin.window);
-						width=fixISize(width,calced.width); // ensure they are %
-						height=fixISize(height,calced.height);
-						sprops.pctwidth = width;
-						sprops.pctheight = height;
+						// Removed: width=fixISize(width,calced.width); (no longer force %)
+						// Removed: height=fixISize(height,calced.height);
+						// Removed: sprops.pctwidth/height (use width/height strings directly)
 						var newContainerDiv = document.createElement('div');
 						newContainerDiv.style.cssText = containerDiv.style.cssText;
 						containerDiv.appendChild(newContainerDiv);
@@ -1701,35 +1675,35 @@ var MXP = function(sipwin)
 							newContainerDiv.style.left = siblingDiv.style.left;
 							newContainerDiv.style.top = siblingDiv.style.top;
 							newContainerDiv.style.height = siblingDiv.style.height;
-							siblingDiv.style.left = (dePct(siblingDiv.style.left) + dePct(width))+'%';
 							newContainerDiv.style.width = width;
-							siblingDiv.style.width = (dePct(siblingDiv.style.width) - dePct(width))+'%';
+							// Changed: Use addDim/subDim
+							siblingDiv.style.left = addDim(siblingDiv.style.left, width);
+							siblingDiv.style.width = subDim(siblingDiv.style.width, width);
 							break;
 						case 1: // right
-							newContainerDiv.style.left = (dePct(siblingDiv.style.left)
-														+dePct(siblingDiv.style.width)
-														-dePct(width))+'%';
-							siblingDiv.style.width = (dePct(siblingDiv.style.width) - dePct(width))+'%';
+							// Changed: Use addDim/subDim
+							newContainerDiv.style.left = subDim(addDim(siblingDiv.style.left, siblingDiv.style.width), width);
 							newContainerDiv.style.top = siblingDiv.style.top;
 							newContainerDiv.style.height = siblingDiv.style.height;
 							newContainerDiv.style.width = width;
+							siblingDiv.style.width = subDim(siblingDiv.style.width, width);
 							break;
 						case 2: // top
 							newContainerDiv.style.top = siblingDiv.style.top;
 							newContainerDiv.style.left = siblingDiv.style.left;
 							newContainerDiv.style.width = siblingDiv.style.width;
-							siblingDiv.style.top = (dePct(siblingDiv.style.top) + dePct(height))+'%';
 							newContainerDiv.style.height = height;
-							siblingDiv.style.height = (dePct(siblingDiv.style.height) - dePct(height))+'%';
+							// Changed: Use addDim/subDim
+							siblingDiv.style.top = addDim(siblingDiv.style.top, height);
+							siblingDiv.style.height = subDim(siblingDiv.style.height, height);
 							break;
 						case 3: // bottom
-							newContainerDiv.style.top = (dePct(siblingDiv.style.top)
-														+dePct(siblingDiv.style.height)
-														-dePct(height))+'%';
-							siblingDiv.style.height = (dePct(siblingDiv.style.height) - dePct(height))+'%';
+							// Changed: Use addDim/subDim
+							newContainerDiv.style.top = subDim(addDim(siblingDiv.style.top, siblingDiv.style.height), height);
 							newContainerDiv.style.left = siblingDiv.style.left;
 							newContainerDiv.style.width = siblingDiv.style.width;
 							newContainerDiv.style.height = height;
+							siblingDiv.style.height = subDim(siblingDiv.style.height, height);
 							break;
 						}
 						newContainerDiv.appendChild(newContentWindow); // dont do until left/width/top/heigh
@@ -1797,6 +1771,7 @@ var MXP = function(sipwin)
 					var newTopWindow = document.createElement('div');
 					if(window.sipcounter === undefined) window.sipcounter=1;
 					newTopWindow.id = "WIN" + (window.sipcounter++);
+					// Note: Already handles px/% via fixSize updates
 					newTopWindow.style.cssText = "position:absolute;top:"+top+";left:"+left+";height:"+height+";width:"+width+";";
 					newTopWindow.style.cssText += "border-style:solid;border-width:5px;border-color:white;";
 					newTopWindow.style.backgroundColor = 'darkgray';
