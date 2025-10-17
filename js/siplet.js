@@ -172,6 +172,10 @@ function SipletWindow(windowName)
 			o.style.width = '100%';
 			o.style.left = '0%';
 		});
+		this.window.setAttribute('role', 'log');
+		this.window.setAttribute('aria-live', 'polite');
+		this.window.setAttribute('aria-atomic', 'false');
+		this.window.setAttribute('aria-busy', 'false');
 		this.window.style.overflowY = 'auto';
 		this.window.style.overflowX = 'auto';
 		this.fixOverflow();
@@ -442,7 +446,9 @@ function SipletWindow(windowName)
 		span.innerHTML = html;
 		updateMediaImagesInSpan(this.sipfs, span);
 		var brCt = brCount(html);
+		this.window.setAttribute('aria-busy', 'true');
 		this.flushNode(span, brCt);
+		this.window.setAttribute('aria-busy', 'false');
 		return span;
 	};
 	
@@ -1257,10 +1263,26 @@ function SipletWindow(windowName)
 		}
 		return null;
 	};
+	
+	this.clearWindow = function(frame)
+	{
+		var framechoices = this.mxp.getFrameMap();
+		if((frame === undefined)||(frame===null)||(!frame.length))
+			frame='_top';
+		if(!(frame in framechoices))
+			return;
+		var frame = framechoices[frame];
+		if(frame.firstChild)
+			frame = frame.firstChild;
+		this.cleanDiv(frame);
+		frame.innerHTML = '';
+	}
 
 	this.displayAt = function(value, frame)
 	{
 		var framechoices = this.mxp.getFrameMap();
+		if((frame === undefined)||(frame===null)||(!frame.length))
+			frame='_top';
 		if(!(frame in framechoices))
 			return;
 		var frame = framechoices[frame];
@@ -1355,8 +1377,13 @@ function SipletWindow(windowName)
 					json = {'type':'event', 'data': event};
 				}
 			}
-			if(!('type' in json))
-				json['type'] = 'event';
+			if(isJsonObject(json))
+			{
+				if(!('type' in json))
+					json['type'] = 'event';
+			}
+			else
+				json = {'type':'event', 'data': event};
 			var doc = this.fixVariables(JSON.stringify(json));
 			this.plugins.postEventToPlugin(plugin, JSON.parse(doc));	
 		}
