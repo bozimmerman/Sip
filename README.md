@@ -1,6 +1,6 @@
 # Sip MUD Client
 
-Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is optimized for [CoffeeMUD](http://www.coffeemud.net/), but can be used with others.  Originally launched as a Java AWT client over 20 years ago, Sip has been reimagined for today’s players.
+Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is optimized for [CoffeeMUD](http://www.coffeemud.net/), but can be used with others.  Originally launched as a Java AWT client over 20 years ago, Sip has been re-imagined for the latest tech and protocols.
 
 ## Features
 
@@ -23,29 +23,29 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
 ![Sip Screen](https://zimmers.net/home/mud/sip2.jpg)
 
 ## Binaries
- - Sip-3.2.6.linux.AppImage (Linux Ubuntu 18.04+, Debian 10+, Fedora 32+, or equivalents)
- - Sip-3.2.6.linux.deb  (Debian-based Linux Ubuntu 18.04+, Debian 10+, or Mint 19+, 64-bit)
- - Sip-3.2.6.linux.rpm  (RPM-based Linux Fedora 32+, CentOS 8+, or openSUSE Leap 15.2+, 64-bit)
- - Sip-3.2.6.mac.dmg (macOS 10.15+ x64 and arm64)
- - Sip-3.2.6.mac.zip (macOS 10.15+ x64 and arm64)
- - Sip-3.2.6.win64.exe (Windows 10 64-bit)
- - Sip-3.2.6.win32.exe (Windows 10 32-bit)
+ - Sip-3.3.1.linux.AppImage (Linux Ubuntu 18.04+, Debian 10+, Fedora 32+, or equivalents)
+ - Sip-3.3.1.linux.deb  (Debian-based Linux Ubuntu 18.04+, Debian 10+, or Mint 19+, 64-bit)
+ - Sip-3.3.1.linux.rpm  (RPM-based Linux Fedora 32+, CentOS 8+, or openSUSE Leap 15.2+, 64-bit)
+ - Sip-3.3.1.mac.dmg (macOS 10.15+ x64 and arm64)
+ - Sip-3.3.1.mac.zip (macOS 10.15+ x64 and arm64)
+ - Sip-3.3.1.win64.exe (Windows 10 64-bit)
+ - Sip-3.3.1.win32.exe (Windows 10 32-bit)
 
 ## Installation
 
 1. **Download the Executable**:
-   - Download `Sip-3.2.6.win64.exe` from [GitHub Releases](https://github.com/bozimmerman/sip/releases)
+   - Download `Sip-3.3.1.win64.exe` from [GitHub Releases](https://github.com/bozimmerman/sip/releases)
 
 2. **Run Sip**:
-   - Double-click `Sip-3.2.6.win64.exe` to launch the app on Windows. No installation is required—this is a portable executable.
+   - Double-click `Sip-3.3.1.win64.exe` to launch the app on Windows. No installation is required—this is a portable executable.
 
 ## Usage
 
 1. **Launch Sip**:
-   - Run `Sip-3.2.6.win64.exe`.
+   - Run `Sip-3.3.1.win64.exe`.
    - Optionally, use `--dev` to enable DevTools for troubleshooting:
      ```
-     Sip-3.2.6.win64.exe --dev
+     Sip-3.3.1.win64.exe --dev
      ```
 
 2. **Connect to CoffeeMUD**:
@@ -94,7 +94,7 @@ or
 
    npm run dist:linux
 
-- Outputs e.g. `Sip-3.2.6.win64.exe` in the `dist/` folder.
+- Outputs e.g. `Sip-3.3.1.win64.exe` in the `dist/` folder.
 
 ## Known Issues
 
