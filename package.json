@@ -71,6 +71,7 @@
                 "deb",
                 "rpm"
             ],
+            "executableName": "sip-mud-client",
             "category": "Utility",
             "artifactName": "${name}-${version}.linux.${ext}"
         }
