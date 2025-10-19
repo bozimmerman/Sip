@@ -8,10 +8,10 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "electron .",
         "dist:win": "node update-version.js a && electron-builder --win --ia32 --x64 --publish never",
-        "dist:linux": "node update-version.js a && electron-builder --linux --publish never",
+        "dist:linux": "node update-version.js c && electron-builder --linux --publish never",
         "dist:mac": "node update-version.js a && electron-builder --mac --publish never",
         "distb:win": "node update-version.js b && electron-builder --win --ia32 --x64 --publish never",
-        "distb:linux": "node update-version.js b && electron-builder --linux --publish never",
+        "distb:linux": "node update-version.js d && electron-builder --linux --publish never",
         "distb:mac": "node update-version.js b && electron-builder --mac --publish never"
     },
     "author": 
