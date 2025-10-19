@@ -75,8 +75,8 @@ pkg.build.productName = productName;
 pkg.build.linux.executableName = productName;
 pkg.build.linux.artifactName = pkg.build.linux.artifactName.replace('${name}', linuxAName);
 pkg.build.linux.desktop.entry.Comment = description;
-pkg.build.linux.desktop.entry.Name = displayName;
-  
+pkg.build.linux.desktop.entry.Name = displayName.replace(' ', '_');
+
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4) + '\n');  // Preserve formatting
 
 console.log(`Updated package.json version to ${fullVersion}`);
