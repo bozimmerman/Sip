@@ -83,6 +83,7 @@
             "executableName": "sip-mud-client",
             "category": "Utility",
             "artifactName": "${name}-${version}.linux.${ext}",
+            "icon": "icon.png",
             "desktop": 
             {
                 "Name": "Sip MUD Client",
