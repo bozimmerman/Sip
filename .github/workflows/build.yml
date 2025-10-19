@@ -93,7 +93,7 @@ jobs:
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
             BINNAME="sip-mud-client"
-            if [ "${PRODUCT" = "SipOfCoffeeMud" ]; then
+            if [ "$PRODUCT" = "SipOfCoffeeMud" ]; then
               BINNAME="sip-of-coffeemud"
             fi
             VERSION=$(jq -r .version package.json)
