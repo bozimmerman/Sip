@@ -11,7 +11,8 @@ const minorRegex = /VERSION_MINOR:\s*['"]([\d.]+)['"]/;
 const majorMatch = jsContent.match(majorRegex);
 const minorMatch = jsContent.match(minorRegex);
 
-if (!majorMatch || !minorMatch) {
+if (!majorMatch || !minorMatch) 
+{
 	console.error('Error: Could not extract versions from siplet.js');
 	process.exit(1);
 }
@@ -74,8 +75,8 @@ pkg.name = topName;
 pkg.build.productName = productName;
 pkg.build.linux.executableName = productName;
 pkg.build.linux.artifactName = pkg.build.linux.artifactName.replace('${name}', linuxAName);
-pkg.build.linux.desktop.entry.Comment = description;
-pkg.build.linux.desktop.entry.Name = displayName;
+//pkg.build.linux.desktop.entry.Comment = description;
+//pkg.build.linux.desktop.entry.Name = displayName;
 
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4) + '\n');  // Preserve formatting
 
