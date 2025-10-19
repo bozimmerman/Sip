@@ -85,5 +85,5 @@ var newJsContent = jsContent.replace(nameRegex, "NAME: window.isElectron?'"+disp
 const cmRegex = /COFFEE_MUD:\s*(true|false),/;
 newJsContent = newJsContent.replace(cmRegex, `COFFEE_MUD: ${cmOnlyFlag},`);
 fs.writeFileSync(jsPath, newJsContent);
-console.log(`Updated Siplet.NAME to '${appName}'`);
+console.log(`Updated Siplet.NAME to '${productName}'`);
 
