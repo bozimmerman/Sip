@@ -50,7 +50,7 @@ if(variation === 'c')
 	productName = 'sip-mud-client';
 	displayName = 'Sip MUD Client';
 	topName = 'sip-mud-client';
-	linuxAName = 'Sip'
+	linuxAName = 'SipMUDClient'
 }
 else 
 if(variation === 'd')
@@ -75,7 +75,7 @@ pkg.build.productName = productName;
 pkg.build.linux.executableName = productName;
 pkg.build.linux.artifactName = pkg.build.linux.artifactName.replace('${name}', linuxAName);
 pkg.build.linux.desktop.entry.Comment = description;
-pkg.build.linux.desktop.entry.Name = displayName.replace(' ', '_');
+pkg.build.linux.desktop.entry.Name = displayName;
 
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4) + '\n');  // Preserve formatting
 
