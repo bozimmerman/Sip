@@ -30,7 +30,7 @@ if (process.argv.length > 2)
 var cmOnlyFlag = (variation === 'b') ? 'true' : 'false';
 var productName = 'Sip MUD Client';
 var topName = 'Sip';
-var artifactName = 'Sip';
+var linuxAName = 'Sip';
 var displayName = 'Sip MUD Client';
 var description = 'Sip -a MUD Client!'
 if(variation === 'a')
@@ -41,7 +41,7 @@ if(variation === 'b')
 	productName = 'Sip of CoffeeMud';
 	displayName = 'Sip of CoffeeMud';
 	topName = 'SipOfCoffeemud';
-	artifactName = 'SipOfCoffeeMud'
+	linuxAName = 'SipOfCoffeeMud'
 	description = "Sip of CoffeeMud - A MUD client optimized for CoffeeMud";
 }
 else 
@@ -50,7 +50,7 @@ if(variation === 'c')
 	productName = 'sip-mud-client';
 	displayName = 'Sip MUD Client';
 	topName = 'sip-mud-client';
-	artifactName = 'Sip'
+	linuxAName = 'Sip'
 }
 else 
 if(variation === 'd')
@@ -58,7 +58,7 @@ if(variation === 'd')
 	productName = 'sip-of-coffeemud';
 	displayName = 'Sip of CoffeeMud';
 	topName = 'sip-of-coffeemud';
-	artifactName = 'SipOfCoffeeMud'
+	linuxAName = 'SipOfCoffeeMud'
 	description = "Sip of CoffeeMud - A MUD client optimized for CoffeeMud";
 }
 else 
@@ -73,7 +73,7 @@ pkg.description = description;
 pkg.name = topName;
 pkg.build.productName = productName;
 pkg.build.linux.executableName = productName;
-pkg.build.linux.artifactName = pkg.build.linux.artifactName.replace('${name}', artifactName);
+pkg.build.linux.artifactName = pkg.build.linux.artifactName.replace('${name}', linuxAName);
 pkg.build.linux.desktop.entry.Comment = description;
 pkg.build.linux.desktop.entry.Name = displayName;
   
