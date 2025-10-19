@@ -35,6 +35,7 @@ var displayName = 'Sip MUD Client';
 var description = 'Sip -a MUD Client!'
 if(variation === 'a')
 {}
+else
 if(variation === 'b')
 {
 	productName = 'Sip of CoffeeMud';
@@ -52,7 +53,7 @@ if(variation === 'c')
 	artifactName = 'Sip'
 }
 else 
-if(variation === 'b')
+if(variation === 'd')
 {
 	productName = 'sip-of-coffeemud';
 	displayName = 'Sip of CoffeeMud';
@@ -62,7 +63,7 @@ if(variation === 'b')
 }
 else 
 {
-	console.error('Error: Invalid variation argument. Must be "a" or "b".');
+	console.error('Error: Invalid variation argument. Must be a, b, c or d.');
 	process.exit(1);
 }
 
