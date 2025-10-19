@@ -3,7 +3,8 @@
     "version": "3.3.0",
     "description": "Sip - A MUD Client!",
     "main": "main.js",
-    "scripts": {
+    "scripts": 
+    {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "electron .",
         "dist:win": "node update-version.js a && electron-builder --win --ia32 --x64 --publish never",
@@ -13,18 +14,21 @@
         "distb:linux": "node update-version.js b && electron-builder --linux --publish never",
         "distb:mac": "node update-version.js b && electron-builder --mac --publish never"
     },
-    "author": {
+    "author": 
+    {
         "name": "Bo Zimmerman",
         "email": "bo@zimmers.net"
     },
     "homepage": "http://www.coffeemud.org/",
     "license": "Apache 2.0",
     "keywords": [],
-    "devDependencies": {
+    "devDependencies": 
+    {
         "electron": "^36.3.1",
         "electron-builder": "^26.0.19"
     },
-    "build": {
+    "build": 
+    {
         "appId": "com.planet_ink.sip",
         "productName": "Sip MUD Client",
         "files": [
@@ -36,7 +40,8 @@
             "images/**/*",
             "js/**/*"
         ],
-        "win": {
+        "win": 
+        {
             "target": [
                 {
                     "target": "portable",
@@ -54,8 +59,10 @@
             "icon": "icon.png",
             "artifactName": "${name}-${version}.${arch}.exe"
         },
-        "mac": {
-            "target": [
+        "mac": 
+        {
+            "target": 
+            [
                 "dmg",
                 "zip"
             ],
@@ -65,18 +72,27 @@
             "gatekeeperAssess": false,
             "hardenedRuntime": false
         },
-        "linux": {
-            "target": [
+        "linux": 
+        {
+            "target": 
+            [
                 "AppImage",
                 "deb",
                 "rpm"
             ],
             "executableName": "sip-mud-client",
             "category": "Utility",
-            "artifactName": "${name}-${version}.linux.${ext}"
+            "artifactName": "${name}-${version}.linux.${ext}",
+            "desktop": 
+            {
+                "Name": "Sip MUD Client",
+                "Comment": "Sip - A MUD Client!",
+                "Categories": "Utility;"
+            }
         }
     },
-    "dependencies": {
+    "dependencies": 
+    {
         "@electron/remote": "^2.1.2"
     }
 }
