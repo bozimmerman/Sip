@@ -92,13 +92,17 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
+            BINNAME="sip-mud-client"
+            if [ "${PRODUCT" = "SipOfCoffeeMud" ]; then
+              BINNAME="sip-of-coffeemud"
+            fi
             VERSION=$(jq -r .version package.json)
             curl -L -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
             chmod +x appimagetool
             mkdir $PRODUCT.AppDir
             cp -r dist/linux-unpacked/* $PRODUCT.AppDir/
             cd $PRODUCT.AppDir
-            ln -s $PRODUCT AppRun
+            ln -s $BINNAME AppRun
             cp ../.desktop $PRODUCT.desktop
             cp ../icon.png icon.png
             cd ..

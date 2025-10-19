@@ -41,7 +41,7 @@ if(variation === 'b')
 {
 	productName = 'Sip of CoffeeMud';
 	displayName = 'Sip of CoffeeMud';
-	topName = 'SipOfCoffeemud';
+	topName = 'SipOfCoffeeMud';
 	linuxAName = 'SipOfCoffeeMud'
 	description = "Sip of CoffeeMud - A MUD client optimized for CoffeeMud";
 }
