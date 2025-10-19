@@ -86,9 +86,12 @@
             "icon": "icon.png",
             "desktop": 
             {
-                "Name": "Sip MUD Client",
-                "Comment": "Sip - A MUD Client!",
-                "Categories": "Utility;"
+                "entry":
+                {
+                    "Name": "Sip MUD Client",
+                    "Comment": "Sip - A MUD Client!",
+                    "Categories": "Utility;"
+                }
             }
         }
     },

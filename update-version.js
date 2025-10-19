@@ -74,8 +74,8 @@ pkg.name = topName;
 pkg.build.productName = productName;
 pkg.build.linux.executeableName = productName;
 pkg.build.linux.artifactName = pkg.build.linux.artifactName.replace('${name}', artifactName);
-pkg.build.linux.desktop.Comment = description;
-pkg.build.linux.desktop.Name = displayName;
+pkg.build.linux.desktop.entry.Comment = description;
+pkg.build.linux.desktop.entry.Name = displayName;
   
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4) + '\n');  // Preserve formatting
 
