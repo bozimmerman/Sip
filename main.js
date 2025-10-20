@@ -1,4 +1,5 @@
 const { app, BrowserWindow, contextBridge, ipcMain, dialog } = require('electron');
+app.commandLine.appendSwitch('gtk-version', '3');
 const path = require('path');
 require('net')
 require('fs')
