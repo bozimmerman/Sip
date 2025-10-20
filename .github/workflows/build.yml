@@ -102,7 +102,6 @@ jobs:
             mkdir $PRODUCT.AppDir
             cp -r dist/linux-unpacked/* $PRODUCT.AppDir/
             cd $PRODUCT.AppDir
-            cat << -EOF > AppRun
             echo '#!/bin/bash' > AppRun
             echo 'HERE="$(dirname "$(readlink -f "${0}")")"' >> AppRun
             echo 'exec "${HERE}/'"$BINNAME"'" --gtk-version=3 "$@"' >> AppRun
@@ -111,7 +110,6 @@ jobs:
             cp ../icon.png icon.png
             cd ..
             ./appimagetool $PRODUCT.AppDir dist/$PRODUCT-${VERSION}.linux.AppImage
-            
           else
             npm run ${{ matrix.build_cmd }}
           fi
