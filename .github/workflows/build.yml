@@ -84,7 +84,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2 rpm jq cpio rpm-build
+          sudo apt-get install -y libfuse2t64 rpm jq cpio
 
       - name: Build Sip
         run: |
