@@ -84,14 +84,15 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2 rpm jq
+          sudo apt-get install -y libfuse2 rpm jq ruby-dev build-essential
+          sudo gem install fpm
 
       - name: Build Sip
         env:
           PRODUCT: ${{ matrix.product_name }}
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir deb rpm
+            env -i PATH="$PATH" HOME="$HOME" npm run ${{ matrix.build_cmd }} -- --linux dir
             BINNAME="sip-mud-client"
             if [ "$PRODUCT" = "SipOfCoffeeMud" ]; then
               BINNAME="sip-of-coffeemud"
@@ -110,6 +111,22 @@ jobs:
             cp ../icon.png icon.png
             cd ..
             ./appimagetool $PRODUCT.AppDir dist/$PRODUCT-${VERSION}.linux.AppImage
+            
+            # Create packaging structure for DEB and RPM (uses AppRun wrapper)
+            mkdir -p packaging/opt/"$PRODUCT" packaging/usr/share/applications packaging/usr/share/icons/hicolor/256x256/apps packaging/usr/bin
+            cp -r $PRODUCT.AppDir/* packaging/opt/"$PRODUCT"/
+            cp packaging/opt/"$PRODUCT"/"$PRODUCT".desktop packaging/usr/share/applications/
+            cp packaging/opt/"$PRODUCT"/icon.png packaging/usr/share/icons/hicolor/256x256/apps/"$PRODUCT".png
+            ln -s /opt/"$PRODUCT"/AppRun packaging/usr/bin/"$BINNAME"
+            sed -i "s/Exec=.*/Exec=\/usr\/bin\/$BINNAME %U/" packaging/usr/share/applications/"$PRODUCT".desktop
+            sed -i "s/Icon=.*/Icon=$PRODUCT/" packaging/usr/share/applications/"$PRODUCT".desktop
+             
+            # Build DEB with fpm (add more --depends if needed)
+            fpm -s dir -t deb -n "$PRODUCT" -v "$VERSION" -a amd64 -C packaging -p dist/"$PRODUCT"_"$VERSION"_amd64.deb --prefix / --depends libgtk-3-0 --depends libnss3 --depends libnotify4 --depends libxss1 --depends libgbm1 --depends libasound2 --depends libdbus-1-3
+             
+            # Build RPM with fpm (add more --depends if needed)
+            fpm -s dir -t rpm -n "$PRODUCT" -v "$VERSION" -a x86_64 -C packaging -p dist/"$PRODUCT"-"$VERSION".x86_64.rpm --prefix / --depends gtk3 --depends nss --depends libnotify --depends libXScrnSaver --depends libgbm --depends alsa-lib --depends dbus-libs
+             
           else
             npm run ${{ matrix.build_cmd }}
           fi
