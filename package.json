@@ -69,6 +69,7 @@
             "category": "public.app-category.utilities",
             "artifactName": "${name}-${version}.mac.${ext}",
             "sign": false,
+            "icon": "icon.png",
             "gatekeeperAssess": false,
             "hardenedRuntime": false
         },
