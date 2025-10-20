@@ -102,7 +102,12 @@ jobs:
             mkdir $PRODUCT.AppDir
             cp -r dist/linux-unpacked/* $PRODUCT.AppDir/
             cd $PRODUCT.AppDir
-            ln -s $BINNAME AppRun
+            cat << EOF > AppRun
+            #!/bin/bash
+            HERE="\$(dirname "\$(readlink -f "\${0}")")"
+            exec "\${HERE}/$BINNAME" --gtk-version=3 "\$@"
+            EOF
+            chmod +x AppRun
             cp ../.desktop $PRODUCT.desktop
             cp ../icon.png icon.png
             cd ..
