@@ -108,6 +108,7 @@ jobs:
             chmod +x AppRun
             cp ../.desktop $PRODUCT.desktop
             cp ../icon.png icon.png
+            ln -s icon.png .DirIcon
             cd ..
             ./appimagetool $PRODUCT.AppDir dist/$PRODUCT-${VERSION}.linux.AppImage
           else
