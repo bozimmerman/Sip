@@ -1315,3 +1315,267 @@ function populateDivFromUrl(div, url, callback)
 	xhr.onerror = function() { div.innerHTML = 'Failed'; };
 	xhr.send();
 }
+
+function FindModifyCharPosition(me, targetX, targetY, modify, newChar, attrs)
+{
+	var col = 0;
+	var currentRow = 0;
+	var lastBottomPixel = null;
+	var viewportTop = me.getBoundingClientRect().top;
+	var viewportBottom = viewportTop + me.clientHeight;
+	var lineHeight = parseFloat(getComputedStyle(me).lineHeight) || parseFloat(getComputedStyle(me).fontSize) || 16;
+
+	var getPixelYFromNode = function(node)
+	{
+		var range = document.createRange();
+		range.selectNode(node);
+		var rect = range.getBoundingClientRect();
+		return rect.top - viewportTop;
+	};
+	
+	var getElementHeight = function(node)
+	{
+		if(node.nodeType !== Node.ELEMENT_NODE) return lineHeight;
+		
+		var range = document.createRange();
+		range.selectNode(node);
+		var rect = range.getBoundingClientRect();
+		var height = rect.height;
+		
+		if(height === 0 || height < lineHeight / 2)
+		{
+			try {
+				var styles = window.getComputedStyle(node);
+				var marginTop = parseFloat(styles.marginTop) || 0;
+				var marginBottom = parseFloat(styles.marginBottom) || 0;
+				height = Math.max(lineHeight, marginTop + marginBottom + height);
+			} catch(e) {
+				height = lineHeight;
+			}
+		}
+		
+		return height;
+	};
+	
+	var isVisible = function(pixelY)
+	{
+		return pixelY >= 0 && pixelY < me.clientHeight;
+	};
+	
+	var getRowForPixelY = function(pixelY, elementHeight)
+	{
+		// Skip if not visible
+		if(!isVisible(pixelY))
+		{
+			return -1; // Signal to skip this element
+		}
+		
+		// First visible element - initialize
+		if(lastBottomPixel === null)
+		{
+			lastBottomPixel = pixelY + elementHeight;
+			return currentRow;
+		}
+		
+		// Check if this element starts within the current row
+		if(pixelY < lastBottomPixel)
+		{
+			lastBottomPixel = Math.max(lastBottomPixel, pixelY + elementHeight);
+			return currentRow;
+		}
+		
+		// New row
+		currentRow++;
+		lastBottomPixel = pixelY + elementHeight;
+		return currentRow;
+	};
+
+	var traverse = function(node)
+	{
+		if(node.nodeType === Node.TEXT_NODE)
+		{
+			var text = node.textContent;
+			
+			if(text.replace(/[\r\n]/g, '') === '')
+			{
+				return null;
+			}
+			
+			var pixelY = getPixelYFromNode(node);
+			var nodeRow = getRowForPixelY(pixelY, lineHeight);
+			
+			// Skip invisible content
+			if(nodeRow === -1)
+				return null;
+
+			if(nodeRow > targetY)
+				return null;
+
+			for(var i = 0; i < text.length; i++)
+			{
+				if(nodeRow === targetY && col === targetX)
+				{
+					if(modify)
+					{
+						if(attrs && attrs.color)
+						{
+							var span = document.createElement('font');
+							span.setAttribute('color', attrs.color);
+							var before = document.createTextNode(text.substring(0, i));
+							var charNode = document.createTextNode(newChar);
+							var after = document.createTextNode(text.substring(i + 1));
+
+							var parent = node.parentNode;
+							parent.insertBefore(before, node);
+							parent.insertBefore(span, node);
+							span.appendChild(charNode);
+							parent.insertBefore(after, node);
+							parent.removeChild(node);
+						}
+						else
+						{
+							var newText = text.substring(0, i) + newChar + text.substring(i + 1);
+							node.textContent = newText;
+						}
+						return true;
+					}
+					else
+						return {char: text.charAt(i), node: node, offset: i};
+				}
+				col++;
+			}
+			return null;
+		}
+		else if(node.nodeType === Node.ELEMENT_NODE)
+		{
+			var tagName = node.tagName.toUpperCase();
+
+			if(tagName === 'BR')
+			{
+				var pixelY = getPixelYFromNode(node);
+				var elemHeight = lineHeight;
+				var brRow = getRowForPixelY(pixelY, elemHeight);
+				
+				// Skip invisible content
+				if(brRow === -1)
+					return null;
+
+				if(brRow === targetY && modify && col < targetX)
+				{
+					var spacesNeeded = targetX - col;
+					var padding = '';
+					for(var s = 0; s < spacesNeeded; s++)
+						padding += ' ';
+					padding += newChar;
+
+					var parent = node.parentNode;
+
+					if(attrs && attrs.color)
+					{
+						var beforeSpaces = document.createTextNode(padding.substring(0, spacesNeeded));
+						var span = document.createElement('font');
+						span.setAttribute('color', attrs.color);
+						var charNode = document.createTextNode(newChar);
+
+						parent.insertBefore(beforeSpaces, node);
+						parent.insertBefore(span, node);
+						span.appendChild(charNode);
+					}
+					else
+					{
+						var textNode = document.createTextNode(padding);
+						parent.insertBefore(textNode, node);
+					}
+
+					return true;
+				}
+
+				col = 0;
+
+				if(brRow > targetY)
+					return null;
+			}
+			else if(tagName === 'P' && node.childNodes.length === 0)
+			{
+				var pixelY = getPixelYFromNode(node);
+				var elemHeight = getElementHeight(node);
+				var pRow = getRowForPixelY(pixelY, elemHeight);
+				
+				if(pRow === -1)
+					return null;
+
+				var rowsSpanned = Math.max(1, Math.round(elemHeight / lineHeight));
+				if(rowsSpanned > 1)
+				{
+					currentRow += (rowsSpanned - 1);
+					lastBottomPixel = pixelY + elemHeight;
+				}
+				if(targetY >= pRow && targetY < pRow + rowsSpanned && modify && col < targetX)
+				{
+					var spacesNeeded = targetX - col;
+					var padding = '';
+					for(var s = 0; s < spacesNeeded; s++)
+						padding += ' ';
+					padding += newChar;
+
+					var parent = node.parentNode;
+
+					if(attrs && attrs.color)
+					{
+						var beforeSpaces = document.createTextNode(padding.substring(0, spacesNeeded));
+						var span = document.createElement('font');
+						span.setAttribute('color', attrs.color);
+						var charNode = document.createTextNode(newChar);
+
+						parent.insertBefore(beforeSpaces, node);
+						parent.insertBefore(span, node);
+						span.appendChild(charNode);
+					}
+					else
+					{
+						var textNode = document.createTextNode(padding);
+						parent.insertBefore(textNode, node);
+					}
+
+					return true;
+				}
+
+				col = 0;
+
+				if(pRow >= targetY)
+					return null;
+				
+				return null;
+			}
+
+			for(var i = 0; i < node.childNodes.length; i++)
+			{
+				var result = traverse(node.childNodes[i]);
+				if(result !== null)
+					return result;
+			}
+		}
+		return null;
+	};
+
+	for(var i = 0; i < me.childNodes.length; i++)
+	{
+		var container = me.childNodes[i];
+
+		if(container.innerHTML === '' && container.style.height)
+			continue;
+
+		var containerRect = container.getBoundingClientRect();
+		
+		if(containerRect.bottom < viewportTop)
+			continue;
+
+		col = 0;
+
+		var result = traverse(container);
+		if(result !== null)
+			return result;
+	}
+
+	return modify ? false : null;
+}
