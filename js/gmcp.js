@@ -217,18 +217,37 @@ window.gmcpPackages.push({
 		sipwin.cleanDiv(frame);
 		var iframeId = "webview_iframe_"+id.replace(' ','_');
 		frame.innerHTML = '<iframe id="'+iframeId+'"style="width: 100%; height: 100%; border: none; background-color: white;"></iframe>';
-		fetch(url, {
-			method: 'GET',
-			headers: headerObj
-		}).then(function(response) {
-			if (!response.ok) throw new Error('Fetch failed');
-			return response.text();
-		}).then(function(html) {
-			const iframe = document.getElementById(iframeId);
-			iframe.srcdoc = html;
-		}).catch(function(error) {
-			console.error('Error loading iframe:', error);
-		});
+		if(window.isElectron)
+		{
+			setTimeout(function(){
+				const iframe = document.getElementById(iframeId);
+				iframe.src = url;
+			},10);
+		}
+		else
+		{
+			fetch(url, {
+				method: 'GET',
+				headers: headerObj
+			}).then(function(response) {
+				if (!response.ok) throw new Error('Fetch failed');
+				return response.text();
+			}).then(function(html) {
+				const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
+				const injection = '<base href="' + baseUrl + '">';
+				if (html.match(/<head>/i))
+					html = html.replace(/<head>/i, '<head>'+injection);
+				else 
+				if (html.match(/<body>/i))
+					html = html.replace(/<body>/i, injection +'<body>');
+				else
+					html = injection + html;
+				const iframe = document.getElementById(iframeId);
+				iframe.srcdoc = html;
+			}).catch(function(error) {
+				console.error('Error loading iframe:', error);
+			});
+		}
 	}
 });
 

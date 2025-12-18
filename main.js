@@ -1,4 +1,4 @@
-const { app, BrowserWindow, contextBridge, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, contextBridge, ipcMain, dialog, session } = require('electron');
 app.commandLine.appendSwitch('gtk-version', '3');
 const path = require('path');
 require('net')
@@ -6,7 +6,8 @@ require('fs')
 const remoteMain = require('@electron/remote/main');
 remoteMain.initialize();
 
-function createWindow() {
+function createWindow() 
+{
   const win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -24,6 +25,15 @@ function createWindow() {
   if (isDebug) {
     win.webContents.openDevTools();
   }
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => 
+  {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Access-Control-Allow-Origin': ['*']
+      }
+    });
+  });
 }
 
 app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
