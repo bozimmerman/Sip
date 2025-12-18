@@ -22,18 +22,9 @@ function createWindow()
   remoteMain.enable(win.webContents);
 
   const isDebug = process.argv.includes('--dev');
-  if (isDebug) {
+  if (isDebug)
     win.webContents.openDevTools();
-  }
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => 
-  {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Access-Control-Allow-Origin': ['*']
-      }
-    });
-  });
+
 }
 
 app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
@@ -41,7 +32,65 @@ app.on('certificate-error', (event, webContents, url, error, certificate, callba
   callback(true);
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(function() 
+{
+  const skipHeaders = new Set([
+    'access-control-allow-origin',
+    'access-control-allow-methods',
+    'access-control-allow-headers',
+    'access-control-allow-credentials',
+    'x-frame-options',
+    'content-security-policy',
+    'cross-origin-embedder-policy',
+    'cross-origin-opener-policy',
+    'cross-origin-resource-policy'
+  ]);
+  const originHeaders = new Set([
+    'Origin',
+    'origin',
+    'Referer',
+    'referer'
+    ]);
+  let currentOrigin = '*';
+  let requestedHeaders = '*';
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => 
+  {
+    currentOrigin = '*';
+    for (const [key, value] of Object.entries(details.requestHeaders)) 
+    {
+      if (originHeaders.has(key)) 
+      {
+        const headerValue = Array.isArray(value) ? value[0] : value;
+        if (headerValue && headerValue.toLowerCase().startsWith('http')) 
+        {
+          try {
+            currentOrigin = (new URL(headerValue)).origin;
+            break;
+          } catch(e) {}
+        }
+      }
+      else
+      if (key.toLowerCase() === 'access-control-request-headers')
+        requestedHeaders = Array.isArray(value) ? value[0] : value;
+    }
+    callback({ requestHeaders: details.requestHeaders });
+  });
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) =>
+  {
+    const responseHeaders = {};
+    for (const [key, value] of Object.entries(details.responseHeaders))
+    {
+      if (!skipHeaders.has(key.toLowerCase()))
+        responseHeaders[key] = value;
+    }
+    responseHeaders['Access-Control-Allow-Origin'] = [currentOrigin];
+    responseHeaders['Access-Control-Allow-Methods'] = ['*'];
+    responseHeaders['Access-Control-Allow-Headers'] = [requestedHeaders];
+    responseHeaders['Access-Control-Allow-Credentials'] = ['true'];
+
+    callback({ responseHeaders });
+  });
+
   createWindow();
 
   app.on('activate', () => {
