@@ -36,6 +36,13 @@ var PluginActions =
 	"win.dispatchEvent": {text: "Post an event string or json obj (w/'type')", args: 1},
 	"win.onConnect": {text: "Connection made listener", args: 1, callback: true, beip: "SetOnConnect"},
 	"win.onDisconnect": {text: "Connection lost listener", args: 1, callback: true, beip: "SetOnDisconnect"},
+	"win.onReceive": {text: "Bytes received listener", args: 1, callback: true, beip: "SetOnReceive"},
+	"win.onDisplay": {text: "Bytes received listener", args: 1, callback: true},
+	"win.onText": {text: "Bytes received listener", args: 1, callback: true, beip: "SetOnDisplay"},
+	"win.onSend": {text: "Text sent listener", args: 1, callback: true, beip: "SetOnSend"},
+	"win.closeWindow": {text: "Close named or active window", args: 1, beip: "CloseWindow"},
+	"win.onWindowClose": {text: "Frame close listener", args: 1, callback: true, beip: "SetOnClose"},
+	"win.onWindowOpen": {text: "Frame create listener", args: 1, callback: true, beip: "SetOnOpen"}
 };
 
 var PLUGINS = function(sipwin)

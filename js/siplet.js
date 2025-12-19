@@ -135,14 +135,20 @@ function SipletWindow(windowName)
 	{
 		if(Array.isArray(arr) && (arr.length > 0) 
 		&& this.wsopened && this.wsocket)
+		{
+			this.dispatchEvent({type: 'send', data: arr});
 			this.wsocket.send(new Uint8Array(arr).buffer);
+		}
 	};
 
 	this.sendStr = function(str)
 	{
 		if((typeof str === 'string')
 		&& str && this.wsopened && this.wsocket)
+		{
+			this.dispatchEvent({type: 'send', data: str});
 			this.wsocket.send(str);
+		}
 	};
 
 	if(this.topWindow)
@@ -217,7 +223,7 @@ function SipletWindow(windowName)
 			me.flushWindow();
 			if(me.tab && me.tab.innerHTML.startsWith("Connecting"))
 				me.tab.innerHTML = 'Failed connection to ' + cleanUrlName(url);
-			me.dispatchEvent({type: 'closesock',data:url});
+			me.dispatchEvent({type: 'disconnect',data:url});
 			me.wsopened=false; 
 			me.tab.style.backgroundColor="#FF555B";
 			me.tab.style.color="white";
@@ -446,6 +452,7 @@ function SipletWindow(windowName)
 		html = html.replace(/<font[^>]*><\/font>/gi, '');
 		html = html.replace(/(<font[^>]*>)+$/gi, '');
 		var span = document.createElement('span');
+		this.dispatchEvent({type: 'display', data: html});
 		span.innerHTML = html;
 		updateMediaImagesInSpan(this.sipfs, span);
 		var brCt = brCount(html);
@@ -490,6 +497,11 @@ function SipletWindow(windowName)
 		
 	this.onReceive = function(e)
 	{
+		if(typeof e === 'function')
+		{
+			this.addEventListener('binrecv', e);
+			return;
+		}
 		me.dispatchEvent({type: 'binrecv',data:e.data});
 		var entries = me.bin.parse(e.data);
 		me.htmlBuffer = '';
@@ -552,6 +564,7 @@ function SipletWindow(windowName)
 					{
 						if(me.debugText)
 							console.log('text: '+plain);
+						me.dispatchEvent({type: 'text', data: plain});
 						me.textBuffer += plain;
 						me.writeLog(plain);
 					}
@@ -740,25 +753,106 @@ function SipletWindow(windowName)
 	
 	this.onDisconnect = function(func)
 	{
-		this.addEventListener('closesock', func);
+		this.addEventListener('disconnect', func);
 	};
 	
+	this.onSend = function(func)
+	{
+		this.addEventListener('send', func);
+	};
+
+	this.onDisplay = function(func)
+	{
+		this.addEventListener('display', func);
+	};
+
+	this.onText = function(func)
+	{
+		this.addEventListener('text', func);
+	};
+
 	this.onGMCP = function(cmd, func)
 	{
-		if(cmd === null || cmd === undefined)
-			this.removeEventListener('gmcp', func);
-		else
-		if(func)
+		if((typeof cmd === 'function') && (!func))
 		{
-			this.addEventListener('gmcp', function(e)
-			{
-				if((''+e.command).toLowerCase().startsWith(cmd.toLowerCase()) || cmd=='*')
-				{
-					var data = (typeof e.data === 'string') ? e.data : JSON.stringify(e.data);
-					func(e.command,data);
-				}
-			});
+			func = cmd;
+			cmd = undefined;
+			
 		}
+		if(!func)
+			return;
+		this.addEventListener('gmcp', function(e)
+		{
+			if(cmd === undefined || (''+e.command).toLowerCase().startsWith(cmd.toLowerCase()) || cmd==='*')
+			{
+				var data = (typeof e.data === 'string') ? e.data : JSON.stringify(e.data);
+				func(e.command,data);
+			}
+		});
+	};
+	
+	this.onWindowClose = function(win, func)
+	{
+		if((typeof win === 'function') && (!func))
+		{
+			func = win;
+			win = undefined;
+			
+		}
+		if(!func)
+			return;
+		this.addEventListener('closeframe', function(e)
+		{
+			if(win === undefined || (e.toLowerCase() == win.toLowerCase()) || win==='*')
+				func(e);
+		});
+	};
+
+	this.onWindowOpen = function(win, func)
+	{
+		if((typeof win === 'function') && (!func))
+		{
+			func = win;
+			win = undefined;
+			
+		}
+		if(!func)
+			return;
+		this.addEventListener('openframe', function(e)
+		{
+			if(win === undefined || (e.toLowerCase() == win.toLowerCase()) || win==='*')
+				func(e);
+		});
+	};
+
+	this.closeWindow = function(winName)
+	{
+		var framechoices = this.mxp.getFrameMap();
+		if(winName === undefined)
+		{
+			winname = "_unknown";
+			if(this.window === this.topContainer.firstChild)
+				winName = '_top';
+			else
+			for(var frameName in framechoices)
+			{
+				var frame = framechoices[frameName];
+				if((frame === this.window) 
+				|| (frame.sprops && frame.firstChild && frame.firstChild === this.window))
+				{
+					winName = frameName;
+					break;
+				}
+			}
+		}
+		if(winName.toLowerCase() === '_top')
+		{
+			// shut down everything.
+			CloseTab({parentNode: this.tab});
+			return;
+		}
+		if(winName in framechoices) // this will leak all manner of listeners here
+			this.process('<FRAME NAME="'+winName+'" ACTION=CLOSE>');
 	};
 	
 	this.onMSDP = function(func)

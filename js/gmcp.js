@@ -227,6 +227,7 @@ window.gmcpPackages.push({
 		sipwin.cleanDiv(frame);
 		var iframeId = "webview_iframe_"+id.replace(' ','_');
 		var iframe = document.createElement("iframe");
+		iframe.mxpId= id;
 		iframe.setAttribute('id', iframeId);
 		iframe.setAttribute('sandbox', 'allow-scripts');
 		iframe.style.width = "100%";
@@ -259,19 +260,25 @@ window.gmcpPackages.push({
 		var iframe = document.getElementById(e.data.webviewId);
 		if (!iframe) 
 			return;
+		var mxpId = iframe.mxpId;
 		var sipwin = FindSipletByChild(iframe);
 		var method = e.data.method;
-		if((!method)||(typeof sipwin[method] !== 'function'))
+		if((!method)||(!sipwin)||(typeof sipwin[method] !== 'function'))
 			return;
+		if(iframe.contentWindow && iframe.contentWindow.postMessage)
+			iframe = iframe.contentWindow;
 		if (e.data.type === 'sip') 
 		{
+			if((method === 'closeWindow') && (mxpId)
+			&&((!e.data.args) || (!e.data.args.length)))
+				e.data.args = [mxpId];
 			var result = sipwin[method].apply(sipwin, e.data.args);
 			if (e.data.callbackId !== null && e.data.callbackId !== undefined) 
 			{
-				iframe.contentWindow.postMessage({
+				iframe.postMessage({
 					type: 'callback',
 					callbackId: e.data.callbackId,
-					result: result
+					result: result ? JSON.parse(JSON.stringify(result)) : undefined
 				}, '*');
 			}
 		}
@@ -281,7 +288,7 @@ window.gmcpPackages.push({
 			var type = method.slice(2).toLowerCase();
 			var sipwinCallback = function(...event) 
 			{
-				iframe.contentWindow.postMessage({
+				iframe.postMessage({
 					type: 'listener-event',
 					callbackId: e.data.callbackId,
 					event: JSON.parse(JSON.stringify(event))
@@ -328,7 +335,6 @@ window.gmcpPackages.push({
 					alsoBeip = `${beip}.${action.beip} = window.win.${m};`;
 				if (action.callback) 
 				{
-					// Callback registration method (OnGMCP, OnMSDP)
 					return `
 						window.win.${m} = function(...args) 
 						{
