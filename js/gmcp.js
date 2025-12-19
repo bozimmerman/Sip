@@ -181,6 +181,11 @@ window.gmcpPackages.push({
 			return;
 		if(!msg["url"])
 			return;
+		if(!window.isElectron)
+		{
+			sipwin.displayText("<P><FONT COLOR=RED>WebView is only available in the desktop client.</FONT></P>");
+			return;
+		}
 		var url = msg["url"];
 		var id = msg["id"];
 		if(!id)
@@ -216,38 +221,9 @@ window.gmcpPackages.push({
 			frame = frame.firstChild;
 		sipwin.cleanDiv(frame);
 		var iframeId = "webview_iframe_"+id.replace(' ','_');
-		frame.innerHTML = '<iframe id="'+iframeId+'"style="width: 100%; height: 100%; border: none; background-color: white;"></iframe>';
-		if(window.isElectron)
-		{
-			setTimeout(function(){
-				const iframe = document.getElementById(iframeId);
-				iframe.src = url;
-			},10);
-		}
-		else
-		{
-			fetch(url, {
-				method: 'GET',
-				headers: headerObj
-			}).then(function(response) {
-				if (!response.ok) throw new Error('Fetch failed');
-				return response.text();
-			}).then(function(html) {
-				const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
-				const injection = '<base href="' + baseUrl + '">';
-				if (html.match(/<head>/i))
-					html = html.replace(/<head>/i, '<head>'+injection);
-				else 
-				if (html.match(/<body>/i))
-					html = html.replace(/<body>/i, injection +'<body>');
-				else
-					html = injection + html;
-				const iframe = document.getElementById(iframeId);
-				iframe.srcdoc = html;
-			}).catch(function(error) {
-				console.error('Error loading iframe:', error);
-			});
-		}
+		frame.innerHTML = '<iframe id="'+iframeId+'" sandbox="allow-scripts" style="width: 100%; height: 100%; border: none; background-color: white;"></iframe>';
+		const iframe = document.getElementById(iframeId);
+		iframe.src = url;
 	}
 });
 
