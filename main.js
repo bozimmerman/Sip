@@ -1,10 +1,11 @@
-const { app, BrowserWindow, contextBridge, ipcMain, dialog, session } = require('electron');
+const { app, BrowserWindow, contextBridge, ipcMain, dialog, session, webFrameMain } = require('electron');
 app.commandLine.appendSwitch('gtk-version', '3');
 const path = require('path');
 require('net')
 require('fs')
 const remoteMain = require('@electron/remote/main');
 remoteMain.initialize();
+const pendingInjections = new Map();
 
 function createWindow() 
 {
@@ -20,6 +21,23 @@ function createWindow()
   win.loadFile('index.html');
   win.setMenu(null);
   remoteMain.enable(win.webContents);
+  win.webContents.on('did-frame-navigate', function(event, url, httpResponseCode, httpStatusText, isMainFrame, frameProcessId, frameRoutingId) 
+  {
+    if (!isMainFrame && pendingInjections.has(url)) 
+    {
+      const injection = pendingInjections.get(url);
+      const frame = webFrameMain.fromId(frameProcessId, frameRoutingId);
+      
+      if (frame) 
+      {
+        frame.executeJavaScript(injection.code)
+          .then(function(){
+            pendingInjections.delete(url);
+          })
+          .catch(function(err){});
+      }
+    }
+  });
 
   const isDebug = process.argv.includes('--dev');
   if (isDebug)
@@ -27,7 +45,7 @@ function createWindow()
 
 }
 
-app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+app.on('certificate-error', function(event, webContents, url, error, certificate, callback) {
   event.preventDefault();
   callback(true);
 });
@@ -90,7 +108,13 @@ app.whenReady().then(function()
 
     callback({ responseHeaders });
   });
-
+  ipcMain.on('webview-inject-request', (event, data) => {
+    pendingInjections.set(data.url, {
+      iframeId: data.iframeId,
+      code: data.code,
+      webContentsId: event.sender.id
+    });
+  });
   createWindow();
 
   app.on('activate', () => {
