@@ -56,7 +56,6 @@ function SipletWindow(windowName)
 	this.sipfs = new SipletFileSystem('SipletFileSystem', this);
 	this.debugFlush = false;
 	this.debugText = false;
-	this.isSiplet
 	var me = this;
 	
 	this.fixOverflow = function()

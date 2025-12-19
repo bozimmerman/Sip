@@ -54,7 +54,8 @@ var PLUGINS = function(sipwin)
 		sipwin.topWindow.appendChild(iframe);
 		//iframe.srcdoc = '<SCRIPT>' + pluginCode + '</SCRIPT>';
 		iframe.srcdoc = '<SCRIPT>window.addEventListener(\'message\', function(event) {if (event.data.type === \'execute\') {' + pluginCode + '}});</SCRIPT>';
-		iframe.onload = function() { // necessary for contentWindow to even exist
+		iframe.onload = function() 
+		{ // necessary for contentWindow to even exist
 			iframe.contentWindow.onmessage=function(event){ 
 				if(iframe.contentWindow.onevent && event.data.payload)
 					iframe.contentWindow.onevent(event.data.payload);
