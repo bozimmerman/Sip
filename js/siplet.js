@@ -490,6 +490,7 @@ function SipletWindow(windowName)
 		
 	this.onReceive = function(e)
 	{
+		me.dispatchEvent({type: 'binrecv',data:e.data});
 		var entries = me.bin.parse(e.data);
 		me.htmlBuffer = '';
 		while(entries.length > 0)
@@ -752,7 +753,10 @@ function SipletWindow(windowName)
 			this.addEventListener('gmcp', function(e)
 			{
 				if((''+e.command).toLowerCase().startsWith(cmd.toLowerCase()) || cmd=='*')
-					func(e);
+				{
+					var data = (typeof e.data === 'string') ? e.data : JSON.stringify(e.data);
+					func([e.command,data]);
+				}
 			});
 		}
 	};

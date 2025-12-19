@@ -382,26 +382,20 @@ window.gmcpPackages.push({
 				else 
 				{
 					return `
-						window.win.${m} = function(...args) {
-							var cbId = null;
-							var finalArgs = [];
-							for (var i = 0; i < args.length; i++) 
+						window.win.${m} = function(...args) 
+						{
+							return new Promise(function(resolve) 
 							{
-								if (typeof args[i] === 'function') 
-								{
-									cbId = callbackId++;
-									callbacks[cbId] = args[i];
-								} 
-								else
-									finalArgs.push(args[i]);
-							}
-							parent.postMessage({
-								type: 'sip',
-								webviewId: '${webviewId}',
-								method: '${m}',
-								args: finalArgs,
-								callbackId: cbId
-							}, '*');
+								var cbId = callbackId++;
+								callbacks[cbId] = resolve;
+								parent.postMessage({
+									type: 'sip',
+									webviewId: '${webviewId}',
+									method: '${m}',
+									args: args,
+									callbackId: cbId
+								}, '*');
+							});
 						};${alsoBeip}`;
 				}
 					
@@ -419,7 +413,10 @@ window.gmcpPackages.push({
 				if (e.data.type === 'listener-event' && e.data.callbackId in callbacks) 
 				{
 					var listener = callbacks[e.data.callbackId];
-					listener.callback(e.data.event);
+					if(Array.isArray(e.data.event))
+						listener.callback(...e.data.event);
+					else
+						listener.callback(e.data.event);
 				}
 			});
 		})();
