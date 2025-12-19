@@ -18,6 +18,7 @@ var SipletActions =
 var PluginActions = 
 {
 	...SipletActions,
+	"win.isConnected": {text: "Returns whether connected", args: 0},
 	"win.sendGMCP": {text: "Send GMCP", args: 2},
 	"win.sendMSDP": {text: "Send MSDP", args: 2},
 	"win.process": {text: "Process MXP", args: 1},
