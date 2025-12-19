@@ -202,7 +202,7 @@ function SipletWindow(windowName)
 		}
 		this.wsocket.onopen = function(event)
 		{
-			me.dispatchEvent({type: 'connect',data:url});
+			me.dispatchEvent({type: 'connect', data:url});
 			me.wsopened=true; 
 			me.tab.style.backgroundColor="green";
 			me.tab.style.color="white";
@@ -755,7 +755,7 @@ function SipletWindow(windowName)
 				if((''+e.command).toLowerCase().startsWith(cmd.toLowerCase()) || cmd=='*')
 				{
 					var data = (typeof e.data === 'string') ? e.data : JSON.stringify(e.data);
-					func([e.command,data]);
+					func(e.command,data);
 				}
 			});
 		}

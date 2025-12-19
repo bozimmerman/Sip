@@ -254,79 +254,51 @@ window.gmcpPackages.push({
 	},
 	_WebViewOnMessage: function(e) 
 	{
-		if(!e || !e.data)
+		if(!e || !e.data || !e.data.webviewId)
 			return;
-		if (e.data.type === 'sip' && e.data.webviewId) 
+		var iframe = document.getElementById(e.data.webviewId);
+		if (!iframe) 
+			return;
+		var sipwin = FindSipletByChild(iframe);
+		var method = e.data.method;
+		if((!method)||(typeof sipwin[method] !== 'function'))
+			return;
+		if (e.data.type === 'sip') 
 		{
-			var iframe = document.getElementById(e.data.webviewId);
-			if (!iframe) 
-				return;
-			var sipwin = FindSipletByChild(iframe);
-			var method = e.data.method;
-			if (sipwin[method]) 
+			var result = sipwin[method].apply(sipwin, e.data.args);
+			if (e.data.callbackId !== null && e.data.callbackId !== undefined) 
 			{
-				var result = sipwin[method].apply(sipwin, e.data.args);
-				if (e.data.callbackId !== null && e.data.callbackId !== undefined) 
-				{
-					iframe.contentWindow.postMessage({
-						type: 'callback',
-						callbackId: e.data.callbackId,
-						result: result
-					}, '*');
-				}
+				iframe.contentWindow.postMessage({
+					type: 'callback',
+					callbackId: e.data.callbackId,
+					result: result
+				}, '*');
 			}
 		}
 		else 
 		if (e.data.type === 'register-listener') 
 		{
-			var iframe = document.getElementById(e.data.webviewId);
-			if (!iframe) 
-				return;
-			var sipwin = FindSipletByChild(iframe);
-			if (e.data.method === 'onGMCP') 
+			var type = method.slice(2).toLowerCase();
+			var sipwinCallback = function(...event) 
 			{
-				var command = e.data.args[0].toLowerCase();
-				var sipwinCallback = function(event) 
-				{
-					iframe.contentWindow.postMessage({
-						type: 'listener-event',
-						callbackId: e.data.callbackId,
-						event: JSON.parse(JSON.stringify(event))
-					}, '*');
-				};
-				sipwin.onGMCP(command, sipwinCallback);
+				iframe.contentWindow.postMessage({
+					type: 'listener-event',
+					callbackId: e.data.callbackId,
+					event: JSON.parse(JSON.stringify(event))
+				}, '*');
+			};
+			try {
+				sipwin[method](...(e.data.args || []), sipwinCallback);
 				if (!sipwin.webviewListeners) 
 					sipwin.webviewListeners = new Map();
 				if (!sipwin.webviewListeners.has(e.data.webviewId))
 					sipwin.webviewListeners.set(e.data.webviewId, new Map());
 				sipwin.webviewListeners.get(e.data.webviewId).set(e.data.callbackId, {
 					sipwin: sipwin,
-					type: 'gmcp',
+					type: type,
 					callback: sipwinCallback
 				});
-			}
-			else 
-			if (e.data.method === 'onMSDP') 
-			{
-				var sipwinCallback = function(event) 
-				{
-					iframe.contentWindow.postMessage({
-						type: 'listener-event',
-						callbackId: e.data.callbackId,
-						event: JSON.parse(JSON.stringify(event))
-					}, '*');
-				};
-				sipwin.onMSDP(sipwinCallback);
-				if (!sipwin.webviewListeners) 
-					sipwin.webviewListeners = new Map();
-				if (!sipwin.webviewListeners.has(e.data.webviewId))
-					sipwin.webviewListeners.set(e.data.webviewId, new Map());
-				sipwin.webviewListeners.get(e.data.webviewId).set(e.data.callbackId, {
-					sipwin: sipwin,
-					type: 'msdp',
-					callback: sipwinCallback
-				});
-			}
+			} catch(e) { console.error(e); }
 		}
 	},
 	_GenerateWebViewInjectionCode: function(webviewId, storagePrefix) 
