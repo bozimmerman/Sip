@@ -193,6 +193,7 @@ window.gmcpPackages.push({
 		var id = msg["id"];
 		if(!id)
 			id="WEBVIEW";
+		var titleBar = msg["title"];
 		var dock = msg["dock"];
 		if(!dock)
 			dock = "";
@@ -204,6 +205,7 @@ window.gmcpPackages.push({
 		var framechoices = sipwin.mxp.getFrameMap();
 		if(!(id in framechoices))
 		{
+			var titleStr = titleBar ? ' TITLE="'+titleBar+'"' : '';
 			var width = msg["width"] || "25%";
 			var height = msg["height"] || "25%";
 			var top = msg["top"] || "25%";
@@ -211,10 +213,10 @@ window.gmcpPackages.push({
 			if(dock != "")
 			{
 				var rest=(["top","bottom"].indexOf(dock.toLowerCase())>=0)?("height="+height):("width="+width);
-				sipwin.process('<FRAME ACTION=OPEN INTERNAL NAME="'+id+'"  TITLE="WebView" ALIGN='+dock+' '+rest+'>');
+				sipwin.process('<FRAME ACTION=OPEN INTERNAL NAME="'+id+'" '+titleStr+' ALIGN='+dock+' '+rest+'>');
 			}
 			else
-				sipwin.process('<FRAME ACTION=OPEN FLOATING NAME="'+id+'" TITLE="WebView" LEFT='+left+' TOP='+top+' HEIGHT='+height+' WIDTH='+width+'>');
+				sipwin.process('<FRAME ACTION=OPEN FLOATING NAME="'+id+'" '+titleStr+' LEFT='+left+' TOP='+top+' HEIGHT='+height+' WIDTH='+width+'>');
 			framechoices = sipwin.mxp.getFrameMap();
 		}
 		if(!(id in framechoices))
@@ -283,26 +285,21 @@ window.gmcpPackages.push({
 			var sipwin = FindSipletByChild(iframe);
 			if (e.data.method === 'onGMCP') 
 			{
-				var command = e.data.args[0];
+				var command = e.data.args[0].toLowerCase();
 				var sipwinCallback = function(event) 
 				{
-					if ((event.command === command) || (command == '*') || (command == ''))
-					{
-						iframe.contentWindow.postMessage({
-							type: 'listener-event',
-							listenerId: e.data.listenerId,
-							event: JSON.parse(JSON.stringify(event))
-						}, '*');
-					}
+					iframe.contentWindow.postMessage({
+						type: 'listener-event',
+						callbackId: e.data.callbackId,
+						event: JSON.parse(JSON.stringify(event))
+					}, '*');
 				};
-				
-				sipwin.addEventListener('gmcp', sipwinCallback);
-				
+				sipwin.onGMCP(command, sipwinCallback);
 				if (!sipwin.webviewListeners) 
 					sipwin.webviewListeners = new Map();
 				if (!sipwin.webviewListeners.has(e.data.webviewId))
 					sipwin.webviewListeners.set(e.data.webviewId, new Map());
-				sipwin.webviewListeners.get(e.data.webviewId).set(e.data.listenerId, {
+				sipwin.webviewListeners.get(e.data.webviewId).set(e.data.callbackId, {
 					sipwin: sipwin,
 					type: 'gmcp',
 					callback: sipwinCallback
@@ -315,18 +312,16 @@ window.gmcpPackages.push({
 				{
 					iframe.contentWindow.postMessage({
 						type: 'listener-event',
-						listenerId: e.data.listenerId,
+						callbackId: e.data.callbackId,
 						event: JSON.parse(JSON.stringify(event))
 					}, '*');
 				};
-				
-				sipwin.addEventListener('msdp', sipwinCallback);
-				
+				sipwin.onMSDP(sipwinCallback);
 				if (!sipwin.webviewListeners) 
 					sipwin.webviewListeners = new Map();
 				if (!sipwin.webviewListeners.has(e.data.webviewId))
 					sipwin.webviewListeners.set(e.data.webviewId, new Map());
-				sipwin.webviewListeners.get(e.data.webviewId).set(e.data.listenerId, {
+				sipwin.webviewListeners.get(e.data.webviewId).set(e.data.callbackId, {
 					sipwin: sipwin,
 					type: 'msdp',
 					callback: sipwinCallback
@@ -348,30 +343,41 @@ window.gmcpPackages.push({
 			var callbacks = {};
 			
 			window.win = {};
+			window.chrome={webview:{hostObjects:{client:{}}}};
 			${methods.map(function(m)
 			{
+				var beip = 'window.chrome.webview.hostObjects.client';
 				var actionKey = 'win.' + m;
 				var action = PluginActions[actionKey];
-				
-				if (action && action.callback) 
+				if(!action)
+					return '';
+				var alsoBeip = '';
+				if(action && action.beip)
+					alsoBeip = `${beip}.${action.beip} = window.win.${m};`;
+				if (action.callback) 
 				{
 					// Callback registration method (OnGMCP, OnMSDP)
 					return `
 						window.win.${m} = function(...args) 
 						{
-							var listenerId = callbackId++;
-							var callback = args[args.length - 1];
-							var otherArgs = args.slice(0, -1);
-							callbacks[listenerId] = {callback: callback, method: '${m}'};
+							var cbId = callbackId++;
+							var finalArgs = [];
+							for (var i = 0; i < args.length; i++) 
+							{
+								if (typeof args[i] === 'function') 
+									callbacks[cbId] = {callback: args[i], method: '${m}'};
+								else
+									finalArgs.push(args[i]);
+							}
 							parent.postMessage({
 								type: 'register-listener',
 								webviewId: '${webviewId}',
 								method: '${m}',
-								args: otherArgs,
-								listenerId: listenerId
+								args: finalArgs,
+								callbackId: cbId
 							}, '*');
-							return listenerId;
-						};`;
+							return cbId;
+						};${alsoBeip}`;
 				} 
 				else 
 				{
@@ -396,8 +402,9 @@ window.gmcpPackages.push({
 								args: finalArgs,
 								callbackId: cbId
 							}, '*');
-						};`;
+						};${alsoBeip}`;
 				}
+					
 			}).join('\n')}
 			window.client = window.win;
 			
@@ -409,9 +416,9 @@ window.gmcpPackages.push({
 					delete callbacks[e.data.callbackId];
 				}
 				else 
-				if (e.data.type === 'listener-event' && e.data.listenerId in callbacks) 
+				if (e.data.type === 'listener-event' && e.data.callbackId in callbacks) 
 				{
-					var listener = callbacks[e.data.listenerId];
+					var listener = callbacks[e.data.callbackId];
 					listener.callback(e.data.event);
 				}
 			});
@@ -601,7 +608,7 @@ window.gmcpPackages.push({
 			return;
 
 		var tilemap = sipwin.tilemaps[mapName];
-		if(!tilemap.data || !tilemap.tileImage)
+		if(!tilemap.data || !tilemap.tileImage || !tilemap.titleImage.complete || tilemap.tileImage.naturalWidth === 0)
 			return;
 
 		var canvas = document.getElementById(tilemap.canvasId);

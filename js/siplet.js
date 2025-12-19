@@ -732,6 +732,16 @@ function SipletWindow(windowName)
 		return false;
 	}
 
+	this.onConnect = function(func)
+	{
+		this.addEventListener('connect', func);
+	};
+	
+	this.onDisconnect = function(func)
+	{
+		this.addEventListener('closesock', func);
+	};
+	
 	this.onGMCP = function(cmd, func)
 	{
 		if(cmd === null || cmd === undefined)
@@ -739,8 +749,9 @@ function SipletWindow(windowName)
 		else
 		if(func)
 		{
-			this.addEventListener('gmcp', function(e){
-				if(e.command && (''+e.command).toLowerCase() == cmd.toLowerCase())
+			this.addEventListener('gmcp', function(e)
+			{
+				if((''+e.command).toLowerCase().startsWith(cmd.toLowerCase()) || cmd=='*')
 					func(e);
 			});
 		}
@@ -1461,6 +1472,20 @@ function SipletWindow(windowName)
 	{
 		if(!this.wsopened)
 			return;
+		if(json === undefined)
+		{
+			var x = command.indexOf(' ');
+			if(x >0)
+			{
+				json = command.substring(x+1);
+				command = command.substring(0,x);
+			}
+			else
+			{
+				console.error('sendGMCP: no command or json: '+command+' '+json);
+				return;
+			}
+		}
 		if(typeof json === "string")
 		{
 			try 
