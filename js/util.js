@@ -116,6 +116,38 @@ function setSelectByValue(select, value)
 	}
 }
 
+function addDim(a, b) 
+{
+	if (a === '0' || a === '0px' || a === '0%') 
+		return b;
+	if (b === '0' || b === '0px' || b === '0%') 
+		return a;
+	return `calc(${a} + ${b})`;
+}
+
+function subDim(a, b) 
+{
+	if (b === '0' || b === '0px' || b === '0%') 
+		return a;
+	if (a === '0' || a === '0px' || a === '0%') 
+		return `calc(0 - ${b})`;
+	return `calc(${a} - ${b})`;
+}
+
+var fixDivSizeSpec = function(s)
+{
+	if(s==null || (s==undefined))
+		return null;
+	if(typeof s === 'number')
+		return s + 'px'; // Changed: Append 'px' if plain number
+	s = s.trim();
+	if((s.length>1)&&(s.endsWith("c"))&&(isDigit(s[0])))
+		return (Number(s.substr(0,s.length-1))*16)+'px';
+	if (!s.endsWith('%') && !s.endsWith('px') && !isNaN(parseFloat(s)))
+		return s + 'px';
+	return s;
+};
+
 function isValidAction(s)
 {
 	if(!s) 

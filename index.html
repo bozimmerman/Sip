@@ -53,6 +53,8 @@ TODO: parse out triggers, alias, etc from siplet.
     <textarea rows=3 type="text" id="input"></textarea>
 </div>
 <SCRIPT LANGUAGE=JavaScript>
+class SipSkip extends Error {};
+
 function ConfigureSiplet()
 {
     window.sipfs = new SipletFileSystem('SipletFileSystem');
