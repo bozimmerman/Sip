@@ -1808,49 +1808,7 @@ var MXP = function(sipwin)
 				"imgop": E.getAttributeValue("IMGOP") || ''
 			};
 
-			var sipletParentWindow = sipwin.window;
-			// Handle MODIFY action: check if we need to close and re-open
-			if(modifyFrame != null)
-			{
-				var oldSprops = null;
-				var originalParentWindow = null;
-				if (modifyFrame.parentNode
-				&& modifyFrame.parentNode.parentNode
-				&& modifyFrame.parentNode.parentNode.sprops
-				&& modifyFrame.parentNode.parentNode.sprops.tabbed)
-				{
-					var tabbedContainer = modifyFrame.parentNode.parentNode;
-					var tabs = tabbedContainer.sprops.tabs;
-					var tab = tabs.find(t => t.content === modifyFrame);
-					if(tab)
-					{
-						oldSprops = {
-							dock: tabbedContainer.sprops.dock || "constructed",
-							internal: null,
-							align: null
-						};
-						originalParentWindow = tabbedContainer.originalParentWindow || null;
-					}
-				}
-				else
-				if(modifyFrame.sprops)
-				{
-					oldSprops = modifyFrame.sprops;
-					originalParentWindow = modifyFrame.originalParentWindow || null;
-				}
-				if((oldSprops != null)
-				&&((oldSprops.internal != sprops.internal) || (oldSprops.dock != sprops.dock) || (oldSprops.align != sprops.align)))
-				{
-					this.closeFrame(name);
-					if(originalParentWindow != null)
-					{
-						sipletParentWindow = originalParentWindow;
-						sprops.action = "OPEN";
-						action = "OPEN";
-						modifyFrame = null;
-					}
-				}
-			}
+			// start the opening process!
 
 			/**
 			 * Open tabbed frame:
@@ -2028,12 +1986,12 @@ var MXP = function(sipwin)
 					console.error('Bad internal alignment \''+sprops.align+'\' dock target.');
 					return; // Invalid align
 				}
-				var siblingDiv = sipletParentWindow;
-				var containerDiv = sipletParentWindow.parentNode; // has the titlebar in it and window and so forth
+				var siblingDiv = sipwin.window;
+				var containerDiv = sipwin.window.parentNode; // has the titlebar in it and window and so forth
 				var isInTabbed = (containerDiv.parentNode && containerDiv.parentNode.sprops && containerDiv.parentNode.sprops.tabbed);
 				if(isInTabbed) 
 				{
-					var tabContent = sipletParentWindow;
+					var tabContent = sipwin.window;
 					tabContent.style.position = 'relative';
 					var wrapper = document.createElement('div');
 					wrapper.style.position = 'absolute';
