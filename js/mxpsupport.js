@@ -2755,9 +2755,14 @@ var MXP = function(sipwin)
 			ret += this.executeMode();
 			return ret + '<BR>';
 		}
-		case MXPMODE.LINE_SECURE:
-		case MXPMODE.LINE_LOCKED:
 		case MXPMODE.TEMP_SECURE:
+		{
+			this.mode = this.defaultMode;
+			return this.closeAllTags();
+		}
+		case MXPMODE.LINE_SECURE:
+			this.mode = this.defaultMode;
+		case MXPMODE.LINE_LOCKED:
 		{
 			var ret = this.closeAllTags();
 			ret += this.executeMode();
