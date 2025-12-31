@@ -280,7 +280,7 @@ window.gmcpPackages.push({
 				sipwin.process('<FRAME ACTION='+action+' INTERNAL NAME="'+id+'" '+titleStr+' ALIGN='+dock+' '+rest+'>');
 			}
 			else
-				sipwin.process('<FRAME ACTION='+action+' INTERNAL=NO FLOATING NAME="'+id+'" '+titleStr+' LEFT='+left+' TOP='+top+' HEIGHT='+height+' WIDTH='+width+'>');
+				sipwin.process('<FRAME ACTION='+action+' FLOATING NAME="'+id+'" '+titleStr+' LEFT='+left+' TOP='+top+' HEIGHT='+height+' WIDTH='+width+'>');
 			framechoices = sipwin.mxp.getFrameMap(); // refresh!
 			if(!(id in framechoices))
 				return;
