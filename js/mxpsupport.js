@@ -2757,8 +2757,8 @@ var MXP = function(sipwin)
 		}
 		case MXPMODE.TEMP_SECURE:
 		{
-			this.mode = this.defaultMode;
-			return this.closeAllTags();
+			this.mode = this.defaultMode; // if we got here, something is wrong.
+			return this.closeAllTags() + '<BR>';
 		}
 		case MXPMODE.LINE_SECURE:
 			this.mode = this.defaultMode;
