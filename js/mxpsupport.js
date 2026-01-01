@@ -389,7 +389,7 @@ window.defElements={
 var MXP=function(sipwin)
 {
 	this.defBitmap=0;
-	this.debug=true;
+	this.debug=false;
 	this.reset=function()
 	{
 		this.elements=[];
