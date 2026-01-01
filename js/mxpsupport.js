@@ -2117,68 +2117,71 @@ var MXP=function(sipwin)
 
 					if(oldSprops && (sprops.width !== oldSprops.width || sprops.height !== oldSprops.height))
 					{
+						var processAlignment=function(alignName, dimProp, posProp, crossAligns, sortDesc, fromEnd)
+						{
+							var frames=[];
+							for(var i=0; i<containerDiv.children.length; i++)
+							{
+								var child=containerDiv.children[i];
+								if(child.sprops && child.sprops.align && child.sprops.align.toUpperCase() === alignName)
+									frames.push(child);
+							}
+							frames.sort(function(a, b)
+							{
+								var aPos=parseFloat(a.style[posProp]) || 0;
+								var bPos=parseFloat(b.style[posProp]) || 0;
+								return sortDesc ? (bPos - aPos) : (aPos - bPos);
+							});
+							newContainerDiv.style[dimProp]=sprops[dimProp];
+							var modifiedIndex=frames.indexOf(newContainerDiv);
+							var cumulative='0px';
+							for(var i=0; i<frames.length; i++)
+							{
+								if(i>0)
+									cumulative=addDim(cumulative, frames[i-1].style[dimProp]);
+								if(fromEnd)
+									frames[i].style[posProp]=subDim('100%', addDim(cumulative, frames[i].style[dimProp]));
+								else
+								if(i>modifiedIndex)
+									frames[i].style[posProp]=cumulative;
+							}
+							var privilegedFrame=containerDiv.childNodes[0];
+							var oldPrivilegedPos=fromEnd ? privilegedFrame.style[posProp] : privilegedFrame.style[posProp];
+							var totalDim='0px';
+							for(var i=0; i<frames.length; i++)
+								totalDim=addDim(totalDim, frames[i].style[dimProp]);
+							if(!fromEnd)
+								privilegedFrame.style[posProp]=totalDim;
+							privilegedFrame.style[dimProp]=subDim('100%', totalDim);
+							for(var i=0; i<containerDiv.children.length; i++)
+							{
+								var child=containerDiv.children[i];
+								if(child.sprops && child.sprops.align)
+								{
+									var align=child.sprops.align.toUpperCase();
+									if(crossAligns.indexOf(align)>=0 && child.style[posProp] === oldPrivilegedPos)
+									{
+										if(!fromEnd)
+											child.style[posProp]=totalDim;
+										child.style[dimProp]=subDim('100%', totalDim);
+									}
+								}
+							}
+						};
+						
 						switch(alignx)
 						{
-						case 0: // left alignment
-							newContainerDiv.style.width=sprops.width;
-							for(var i=0; i<siblingsToUpdate.length; i++)
-							{
-								var sib=siblingsToUpdate[i];
-								sib.style.left=sprops.width;
-								if(sib.style.width === 'calc(100% - ' + oldSprops.width + ')')
-									sib.style.width='calc(100% - ' + sprops.width + ')';
-							}
+						case 0: // left
+							processAlignment('LEFT', 'width', 'left', ['TOP','BOTTOM'], false, false);
 							break;
-						case 1: // right alignment
-							newContainerDiv.style.width=sprops.width;
-							newContainerDiv.style.left='calc(100% - ' + sprops.width + ')';
-							for(var i=0; i<siblingsToUpdate.length; i++)
-							{
-								var sib=siblingsToUpdate[i];
-								if(sib.style.width === 'calc(100% - ' + oldSprops.width + ')')
-									sib.style.width='calc(100% - ' + sprops.width + ')';
-							}
+						case 1: // right
+							processAlignment('RIGHT', 'width', 'left', ['TOP','BOTTOM'], true, true);
 							break;
-						case 2: // top alignment
-							newContainerDiv.style.height=sprops.height;
-							for(var i=0; i<siblingsToUpdate.length; i++)
-							{
-								var sib=siblingsToUpdate[i];
-								if((sib.style.top === oldSprops.height)
-								||(sib.style.top === 'calc(100% - ' + oldSprops.height + ')') 
-								||(parseFloat(sib.style.top)>=parseFloat(oldSprops.height)))
-									sib.style.top=sprops.height;
-								if(sib.style.height === 'calc(100% - ' + oldSprops.height + ')')
-									sib.style.height='calc(100% - ' + sprops.height + ')';
-							}
-							if(oldSprops.height && sprops.height
-							&&(oldSprops.height.endsWith('px') && sprops.height.endsWith('px')))
-							{
-								var delta = parseFloat(sprops.height) - parseFloat(oldSprops.height);
-								var privilegedFrame = containerDiv.childNodes[0];
-								var topMatch = privilegedFrame.style.top.match(/(-?\d+)/);
-								if(topMatch) 
-								{
-									var newTop = parseInt(topMatch[1]) + delta;
-									privilegedFrame.style.top = 'calc(' + newTop + 'px)';
-								}
-								var heightMatch = privilegedFrame.style.height.match(/calc\(100% - (\d+)px\)/);
-								if(heightMatch) 
-								{
-									var newOffset = parseInt(heightMatch[1]) + delta;
-									privilegedFrame.style.height = 'calc(100% - ' + newOffset + 'px)';
-								}
-							}
+						case 2: // top
+							processAlignment('TOP', 'height', 'top', ['LEFT','RIGHT'], false, false);
 							break;
-						case 3: // bot alignment
-							newContainerDiv.style.height=sprops.height;
-							newContainerDiv.style.top='calc(100% - ' + sprops.height + ')';
-							for(var i=0; i<siblingsToUpdate.length; i++)
-							{
-								var sib=siblingsToUpdate[i];
-								if(sib.style.height === 'calc(100% - ' + oldSprops.height + ')')
-									sib.style.heig== 'calc(100% - ' + sprops.height + ')';
-							}
+						case 3: // bottom
+							processAlignment('BOTTOM', 'height', 'top', ['LEFT','RIGHT'], true, true);
 							break;
 						}
 					}
