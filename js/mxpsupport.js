@@ -389,6 +389,7 @@ window.defElements={
 var MXP=function(sipwin)
 {
 	this.defBitmap=0;
+	this.debug=true;
 	this.reset=function()
 	{
 		this.elements=[];
@@ -416,12 +417,16 @@ var MXP=function(sipwin)
 	};
 	this.reset();
 
-	this.active=function() { return sipwin.MXPsupport };
+	this.active=function()
+	{
+		return sipwin.MXPsupport;
+	};
 
-	this.cancelProcessing=function() {
+	this.cancelProcessing=function()
+	{
 		var s=this.partial;
 		this.partial=null;
-		if(s.length==0)
+		if((s==null)||(!s.length))
 			return '';
 		// set resume parsing markers
 		if(s[0]=='&')
@@ -430,13 +435,15 @@ var MXP=function(sipwin)
 			return '&lt;\0'+s.substr(1);
 	};
 	
-	this.flush=function() {
+	this.flush=function()
+	{
 		var s=this.partial;
 		this.partial=null;
 		return s == null ? '' : s;
 	};
 
-	this.process=function(c) {
+	this.process=function(c)
+	{
 		if(!this.active())
 			return null;
 		if((typeof c == 'object') && (c.length))
@@ -727,7 +734,7 @@ var MXP=function(sipwin)
 			return ''; // this is an error of some sort
 		}
 		if(this.debug)
-			console.log('mxpp:' + oldString);
+			console.info('mxpp:' + oldString);
 		var tag=this.parts[0].toUpperCase().trim();
 		this.parts.splice(0,1); // lose the tag name
 		var endTag=tag.startsWith("/");
@@ -1772,7 +1779,8 @@ var MXP=function(sipwin)
 				{
 					var error=new SipSkip('');
 					var newFrame=framechoices[name];
-					error.call=function() {
+					error.call=function() 
+					{
 						sipwin.flushWindow();
 						sipwin.window=newFrame;
 					};
@@ -2113,14 +2121,10 @@ var MXP=function(sipwin)
 						{
 						case 0: // left alignment
 							newContainerDiv.style.width=sprops.width;
-							// Update ALL siblings positioned to the right
 							for(var i=0; i<siblingsToUpdate.length; i++)
 							{
 								var sib=siblingsToUpdate[i];
-								if((sib.style.left === oldSprops.width)
-								||(sib.style.left === 'calc(100% - ' + oldSprops.width + ')')
-								||(parseFloat(sib.style.left)>=parseFloat(oldSprops.width)))
-									sib.style.left=sprops.width;
+								sib.style.left=sprops.width;
 								if(sib.style.width === 'calc(100% - ' + oldSprops.width + ')')
 									sib.style.width='calc(100% - ' + sprops.width + ')';
 							}
@@ -2146,6 +2150,24 @@ var MXP=function(sipwin)
 									sib.style.top=sprops.height;
 								if(sib.style.height === 'calc(100% - ' + oldSprops.height + ')')
 									sib.style.height='calc(100% - ' + sprops.height + ')';
+							}
+							if(oldSprops.height && sprops.height
+							&&(oldSprops.height.endsWith('px') && sprops.height.endsWith('px')))
+							{
+								var delta = parseFloat(sprops.height) - parseFloat(oldSprops.height);
+								var privilegedFrame = containerDiv.childNodes[0];
+								var topMatch = privilegedFrame.style.top.match(/(-?\d+)/);
+								if(topMatch) 
+								{
+									var newTop = parseInt(topMatch[1]) + delta;
+									privilegedFrame.style.top = 'calc(' + newTop + 'px)';
+								}
+								var heightMatch = privilegedFrame.style.height.match(/calc\(100% - (\d+)px\)/);
+								if(heightMatch) 
+								{
+									var newOffset = parseInt(heightMatch[1]) + delta;
+									privilegedFrame.style.height = 'calc(100% - ' + newOffset + 'px)';
+								}
 							}
 							break;
 						case 3: // bot alignment
@@ -2410,7 +2432,8 @@ var MXP=function(sipwin)
 				this.applyFrameImageBackground(contentWindow, sprops.image, sprops.imgop);
 				if(sprops.floating == null)
 				{
-					contentWindow.onclick=function() {
+					contentWindow.onclick=function() 
+					{
 						sipwin.topWindow.removeChild(newTopWindow);
 						delete this.frames[name];
 					};
