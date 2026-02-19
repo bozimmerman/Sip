@@ -60,7 +60,7 @@ Sip is a stand-alone desktop client for MUD (Multi-User Dungeon) gaming.  It is 
    - Help for the several features is available under the `Help` menu.
 
 5. ** Launch from Source**
-   - npm start -- --disable-gpu --no-sandbox
+   - npm start -- --dev --disable-gpu --no-sandbox
 
 ## Building from Source
 
